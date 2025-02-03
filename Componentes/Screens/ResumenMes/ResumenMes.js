@@ -95,6 +95,7 @@ function ResumenMes({ navigation }){
                       setMensajeerror( handleError(result['data']['error']))
                     }
                 } else{
+                  
                   const registros=estadocomponente.dataresumen
                   setDataresumen(registros)
                   

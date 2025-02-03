@@ -1,5 +1,5 @@
 import React, { useState,useContext,useEffect } from 'react';
-import { View,  StyleSheet,Text,TouchableOpacity,ScrollView } from 'react-native';
+import { View,  StyleSheet,Text,TouchableOpacity,ScrollView,Keyboard } from 'react-native';
 import { Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
 import { useNavigation } from "@react-navigation/native";
@@ -27,7 +27,7 @@ function CargaManual({ navigation }){
     const[title,setTitle]=useState('CARGA MANUAL')
     const[backto,setBackto]=useState('MainTabs2')
     const[tituloboton,setTituloboton]=useState('REGISTRAR')
-
+    
     // const[backto,setBackto]=useState('DetalleFactura')
     
     const { activarsesion, setActivarsesion } = useContext(AuthContext);
@@ -50,6 +50,7 @@ function CargaManual({ navigation }){
     const [articulosexenta,setArticulosexenta]=useState('')
     const [totaliva,setTotaliva]=useState('')
     const [totalfactura,setTotalfactura]=useState('')
+    const [datafacturaedit,setDatafacturaedit]=useState([])
 
     const [show, setShow] = useState(false);
     const [visibledialogo, setVisibledialogo] = useState(false)
@@ -133,6 +134,7 @@ function CargaManual({ navigation }){
           //liquidacion_iva:Number(totaliva.replace(/\./g, "")) || 0, 
           liquidacion_iva:  typeof totaliva === "string" ? parseFloat(totaliva.replace(/\./g, "")) || 0 : 0,
           cdc:'0',
+          cdcarchivo:'0',
           detallefactura:jsonData,
           tiporegistro:'MANUAL'
           
@@ -263,51 +265,89 @@ function CargaManual({ navigation }){
       return new Date(año, mes - 1, dia); // Los meses en JavaScript son base 0, por eso restamos 1
     };
     useEffect(() => {
-      // console.log('carga manual')
-      // console.log(estadocomponente.factura_editar)
+      
       if(estadocomponente.factura_editar >0){
         setTitle('EDITAR FACTURA')
         setBackto('DetalleFactura')
         setTituloboton('ACTUALIZAR')
         setCodigofacturaoperacion(estadocomponente.factura_editar)
-        // console.log(estadocomponente.datafactura)
+        const valores_factura=estadocomponente.datafactura
+        setDatafacturaedit(valores_factura)
+        console.log(valores_factura.DetalleFactura)
 
-        const totOpeItem10 = Object.values(estadocomponente.datafactura.Conceptos).find(
-          (item) => item.dDesProSer === "Articulos al 10%"
-        )?.dTotOpeItem || 0;
+        const totOpeItem10 = Object.values(valores_factura.DetalleFactura).find(
+          (item) => item.concepto === "Articulos al 10%"
+        )?.total || 0;
         const ent_item10=parseInt(totOpeItem10, 10)
+        console.log(ent_item10)
         setArticulos10(ent_item10 === 0 ? '' : ent_item10.toString());
 
 
 
-        const totOpeItem5 = Object.values(estadocomponente.datafactura.Conceptos).find(
-          (item) => item.dDesProSer === "Articulos al 5%"
-        )?.dTotOpeItem || 0;
+        const totOpeItem5 = Object.values(valores_factura.DetalleFactura).find(
+          (item) => item.concepto === "Articulos al 5%"
+        )?.total || 0;
         const ent_item5=parseInt(totOpeItem5, 10)
         setArticulos5(ent_item5 === 0 ? '' : ent_item5.toString());
 
-        const totOpeItemExenta = Object.values(estadocomponente.datafactura.Conceptos).find(
-          (item) => item.dDesProSer === "Articulos exenta"
-        )?.dTotOpeItemm || 0;
+        const totOpeItemExenta = Object.values(valores_factura.DetalleFactura).find(
+          (item) => item.concepto === "Articulos exenta"
+        )?.total || 0;
         const ent_itemexenta=parseInt(totOpeItemExenta, 10)
-        
         setArticulosexenta(ent_itemexenta === 0 ? '' : ent_itemexenta.toString());
 
-        setIva10(estadocomponente.datafactura.DataMontos.liq_iva10.toString())
-        setIva5(estadocomponente.datafactura.DataMontos.liq_iva5.toString())
-        setTotaliva(estadocomponente.datafactura.DataMontos.total_iva.toString())
-        setTotalfactura(estadocomponente.datafactura.DataMontos.total_operacion.toString())
 
-        setNrofactura(estadocomponente.datafactura.DataFactura.NroFactura)
-        setFechafactura(convertirFecha(estadocomponente.datafactura.DataFactura.FechaOperacion))
-        setRuc(estadocomponente.datafactura.DataEmpresa.NroRuc.slice(0, -2))
-        setDiv(estadocomponente.datafactura.DataEmpresa.NroRuc.slice(-1))
-        setEmpresa(estadocomponente.datafactura.DataEmpresa.Empresa)
+        // // const liqiva10=estadocomponente.datafactura.DataMontos.liq_iva10.toString()
+
+        
+        // const liqiva10 = estadocomponente.datafactura.DataMontos.liq_iva10? estadocomponente.datafactura.DataMontos.liq_iva10.toString(): '';
+        // setIva10(liqiva10)
+
+        // const liqiva5 = estadocomponente.datafactura.DataMontos.liq_iva5? estadocomponente.datafactura.DataMontos.liq_iva5.toString(): '';
+        // setIva5(liqiva5)
+
+        //const totiva = estadocomponente.datafactura.DataMontos.total_iva? estadocomponente.datafactura.DataMontos.total_iva.toString(): '';
+        setTotaliva(valores_factura.liquidacion_iva)
+
+        // const totope = estadocomponente.datafactura.DataMontos.total_operacion? estadocomponente.datafactura.DataMontos.total_operacion.toString(): '';
+        setTotalfactura(valores_factura.total_factura)
+
+        // // 
+
+        setNrofactura(valores_factura.numero_factura)
+        setFechafactura(convertirFecha(valores_factura.fecha_factura))
+        setRuc(valores_factura.RucEmpresa.slice(0, -2))
+        setDiv(valores_factura.RucEmpresa.slice(-1))
+        setEmpresa(valores_factura.NombreEmpresa)
         setEmpresaeditable(false)
 
       }
 
     }, [estadocomponente.factura_editar])
+
+    useEffect(() => {
+      const keyboardDidShowListener = Keyboard.addListener(
+        'keyboardDidShow',
+        () => {
+          
+          actualizarEstadocomponente('isKeyboardVisible',true)
+        }
+      );
+  
+      const keyboardDidHideListener = Keyboard.addListener(
+        'keyboardDidHide',
+        () => {
+          ; // Muestra el Tab cuando el teclado se oculta
+          actualizarEstadocomponente('isKeyboardVisible',false)
+        }
+      );
+  
+      // Limpiar los listeners cuando el componente se desmonte
+      return () => {
+        keyboardDidHideListener.remove();
+        keyboardDidShowListener.remove();
+      };
+    }, []);
 
     return(
 
@@ -350,7 +390,7 @@ function CargaManual({ navigation }){
                                                   paddingLeft:5
                                                 }}
                                               >
-                                                ID Operacion: {estadocomponente.datafactura.Datosregistro.IdOperacion}; {estadocomponente.datafactura.Datosregistro.Fecharegistro}; {estadocomponente.datafactura.Datosregistro.FormaRegistro}
+                                                ID Operacion: {datafacturaedit.id}; {datafacturaedit.fecha_registro}; {datafacturaedit.tipo_registro}
                                               </Text>
                                         </View>
                                         )

@@ -12,7 +12,7 @@ import { AuthContext } from "./AuthContext";
 
 import DrawerContentInicio from "./Componentes/DrawerContentInicio/DrawerContentInicio";
 import QRScanner from "./Componentes/Screens/Qr/QRScanner";
-
+import XmlFileUploader from "./Componentes/XmlFileUploader/XmlFileUploader"
 import ListadoFacturas from "./Componentes/Screens/ListadoFacturas/ListadoFacturas";
 import ResumenMes from "./Componentes/Screens/ResumenMes/ResumenMes";
 import CargaManual from "./Componentes/Screens/CargaManual/CargaManual";
@@ -27,7 +27,7 @@ import Loginv3 from "./Componentes/Screens/Login/Loginv3";
 import Cargando from "./Componentes/Procesando/Cargando";
 import RegistroUsuario from "./Componentes/Screens/RegistroUsuario/RegistroUsuario";
 import ListaArchivos from "./Componentes/Screens/ListaArchivos/ListaArchivos";
-import Configuraciones from "./Componentes/Screens/Configuraciones/Configuraciones";
+
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Ionicons } from "@expo/vector-icons";
@@ -131,7 +131,7 @@ function DrawerInicio({navigation}){
     drawerContent={DrawerContentInicio}
   >
       <Drawer.Screen name="InicioHome" 
-      component={OpcionesStackTabs}
+      component={MainTabs}
       options={{
        
         drawerLabel: ({ color, size,focused }) => {
@@ -184,62 +184,65 @@ function DrawerInicio({navigation}){
         
         }}
       />
-      <Drawer.Screen name="Configuraciones" 
-      component={Configuraciones}
-      options={{
-       
-        drawerLabel: ({ color, size,focused }) => {
-          let colortext
-          colortext = focused ? colors.acctionsbotoncolor : colors.textsub;
-          let familyname
-          familyname= focused ? fonts.regularbold.fontFamily : fonts.regular.fontFamily;
-          
-          return(<Text style={{color:colortext,fontSize:sizefont,fontFamily:familyname}}>Configuraciones</Text>)
-        },
-        
-        drawerIcon: ({size, color})=>(<MaterialCommunityIcons name="archive-clock-outline" size={sizeicon} color={colors.iconcolor}  />),
-        drawerItemStyle:{borderBottomWidth:1,borderBottomColor:'white',marginBottom:5,marginTop:20}
-        
-        }}
-      />
   
   </Drawer.Navigator>
   )
 
 }
-const Staktabs= createNativeStackNavigator();
-function OpcionesStackTabs({ navigation }){
-  return(
+// const Staktabs= createNativeStackNavigator();
+// function OpcionesStackTabs({ navigation }){
+//   return(
 
-  <Staktabs.Navigator screenOptions={{ headerShown: false }}>
-    <Staktabs.Screen name="MainTabs2" component={MainTabs} options={{title: 'MainTabs'}} />
-    <Staktabs.Screen name="StackCargaOpciones" component={StackCargaOpciones} options={{title: 'StackCargaOpciones'}} /> 
+//   <Staktabs.Navigator 
+//   screenOptions={{ headerShown: false,detachPreviousScreen: false,  }}
+//   >
+//     <Staktabs.Screen name="MainTabs2" component={MainTabs} options={{title: 'MainTabs'}} />
+//       <Staktabs.Screen name="StackCargaOpciones" component={StackCargaOpciones} options={{title: 'StackCargaOpciones'}} /> 
+//       <Staktabs.Screen name="CargaArchivoXml" component={CargaArchivoXml} options={{title: 'XmlFileUploader',headerShown: false}} />
 
-
+//       <Staktabs.Screen name="DetalleFactura" component={DetalleFactura} options={{title: 'DetalleFactura',headerShown: false}} />
+//       <Staktabs.Screen name="EditarFactura" component={CargaManual} options={{title: 'EditarFactura',headerShown: false}} />
+//       <Staktabs.Screen name="StackPeriodo" 
+//                             component={Periodo} 
+//                             options={{headerTitle:'Seleccion Periodo',
+//                             headerTitleAlign:'center',
+                            
+//                           }}
+//         />
     
-      
-      <Staktabs.Screen name="CargaArchivoXml" component={CargaArchivoXml} options={{title: 'XmlFileUploader',headerShown: false}} />
+//   </Staktabs.Navigator>
+//   )
 
-      <Staktabs.Screen name="DetalleFactura" component={DetalleFactura} options={{title: 'DetalleFactura',headerShown: false}} />
-      <Staktabs.Screen name="EditarFactura" component={CargaManual} options={{title: 'EditarFactura',headerShown: false}} />
-      <Staktabs.Screen name="StackPeriodo" 
+// }
+
+const StackListado= createNativeStackNavigator();
+function OpcionesStackListado({navigation}){
+  return(
+  <StackListado.Navigator 
+    screenOptions={{ headerShown: false  }}
+    
+  >
+      <StackListado.Screen name="MainListado" component={ListadoFacturas}  />
+      <StackListado.Screen name="DetalleFactura" component={DetalleFactura} options={{title: 'DetalleFactura',headerShown: false}} />
+      <StackListado.Screen name="StackCargaOpciones" component={StackCargaOpciones} options={{title: 'StackCargaOpciones'}} /> 
+      <StackListado.Screen name="CargaArchivoXml" component={CargaArchivoXml} options={{title: 'XmlFileUploader',headerShown: false}} />
+      <StackListado.Screen name="EditarFactura" component={CargaManual} options={{title: 'EditarFactura',headerShown: false}} />
+      <StackListado.Screen name="StackPeriodo" 
                             component={Periodo} 
                             options={{headerTitle:'Seleccion Periodo',
                             headerTitleAlign:'center',
                             
                           }}
         />
-    
-  </Staktabs.Navigator>
+      
+      
+  </StackListado.Navigator>
   )
-
 }
 
 
 
-
 function OpcionesCargaTabs() {
-  const { estadocomponente } = useContext(AuthContext);
   return (
     <Tab.Navigator screenOptions={{ headerShown: true }}
     initialRouteName="QR"
@@ -257,9 +260,7 @@ function OpcionesCargaTabs() {
             )
           },
           
-          tabBarStyle: {
-            display: estadocomponente.isKeyboardVisible ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
-          },
+          
            headerShown: false,
           }}
         />
@@ -291,10 +292,8 @@ function OpcionesCargaTabs() {
               <FontAwesome name="file-code-o" color={colorico} size={24} />
             )
           },
-          tabBarStyle: {
-            display: estadocomponente.isKeyboardVisible ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
-          },
-          headerShown: false,
+          
+           headerShown: false,
           }}
       />
     </Tab.Navigator>
@@ -311,32 +310,13 @@ function MainTabs({ navigation }) {
         
       };
 
-  const CentralButton = ({ handlePress }) => (
-    <TouchableOpacity
-      style={{
-        position: 'absolute',
-        bottom: 15,
-        left: '50%',
-        transform: [{ translateX: -30 }],
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#57DCA3',
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 10,
-      }}
-      onPress={handlePress}
-    >
-      <FontAwesome6 name="add" size={40} color="white" />
-    </TouchableOpacity>
-  );
+
   
   return (
     <View style={{ flex: 1 }}>
 
       <Tab.Navigator
-      initialRouteName="ListadoFacturas"
+      initialRouteName="OpcionesStackListado"
       screenOptions={{
         tabBarStyle: {
           borderTopLeftRadius: 20, 
@@ -377,36 +357,8 @@ function MainTabs({ navigation }) {
             
             }}
         />
-       
-      {/* <Tab.Screen
-          name="CentralButton"
-          component={() => null}
-          options={{
-            tabBarButton: () => (
-              <TouchableOpacity style={{
-                position: 'absolute',
-                bottom: 15,
-                left: '50%',
-                transform: [{ translateX: -30 }], 
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                backgroundColor: '#57DCA3',
-                justifyContent: 'center',
-                alignItems: 'center',
-                elevation: 10, 
-              }}
-              onPress={handlePress}
-              >
-                <FontAwesome6 name="add" size={40} color="white" />
-              </TouchableOpacity>
-            ),
-            tabBarStyle: { display: 'none' }, // Ocultar la barra de este tab
-            headerShown: false,
-          }}
-        /> */}
-        <Tab.Screen name="ListadoFacturas" 
-          component={ListadoFacturas} 
+        <Tab.Screen name="OpcionesStackListado" 
+          component={OpcionesStackListado} 
           options={{
             tabBarLabel: ({ color, size,focused }) => {
               let colortext

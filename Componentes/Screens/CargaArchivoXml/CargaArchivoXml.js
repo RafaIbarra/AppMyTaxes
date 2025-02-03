@@ -34,6 +34,7 @@ const CargaArchivoXml= ({ navigation }) => {
   }
     useEffect(() => {
          const nombrecdc=estadocomponente.datocdc.nombrecdc+'.xml'
+        // const nombrecdc='01800319702001005008254822024103013609116639'+'.xml'
          setNombrearchivo(nombrecdc)
       })
  
@@ -54,6 +55,7 @@ const CargaArchivoXml= ({ navigation }) => {
         
           
           const files = await AndroidXmlHandler.listXmlFiles();
+          console.log(files)
           // Convertir la lista de URIs a objetos con información más detallada
           const formattedFiles = files.map(fileUri => ({
             uri: fileUri,
@@ -118,7 +120,7 @@ const CargaArchivoXml= ({ navigation }) => {
         try {
          const data= await AndroidXmlHandler.uploadXmlFile(
             fileUri);
-          
+          //console.log(data)
           actualizarEstadocomponente('factura_editar',0)
           setStatus('Archivo subido correctamente');
           actualizarEstadocomponente('datafactura',data)

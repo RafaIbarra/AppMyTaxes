@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import API_BASE from '../../Apis/ApiBase';
 const DIRECTORY_URI_KEY = 'mytaxes_directory_uri';
 
 class AndroidXmlHandler {
@@ -97,8 +97,10 @@ class AndroidXmlHandler {
         type: 'application/xml'
       });
 
-      // const response = await fetch('http://192.168.1.103:8000/api/LecturaArchivoXml/', {
-      const response = await fetch('https://tax.rafaelibarra.xyz/api/LecturaArchivoXml/', {
+      const endpoint='LecturaArchivoXml/' 
+      //const response = await fetch('http://192.168.1.103:8000/api/LecturaArchivoXml/', {
+      //const response = await fetch('https://tax.rafaelibarra.xyz/api/LecturaArchivoXml/', {
+      const response = await fetch(`${API_BASE}/${endpoint}`, {
         method: 'POST',
         body: formData,
         headers: {

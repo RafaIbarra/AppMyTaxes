@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
         complistado:true,
         datalistadofactura:[],
         
-        factura_editar:0
+        factura_editar:0,
+        isKeyboardVisible : false
     
       })
 

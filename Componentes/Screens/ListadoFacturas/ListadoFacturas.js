@@ -1,13 +1,13 @@
-import React, { useContext,useEffect,useState,useRef } from 'react';
+import React, { useContext,useEffect,useState,useRef,memo,useMemo  } from 'react';
 
-import {  View,Text,FlatList,TouchableOpacity,StyleSheet ,Animated,TextInput } from "react-native";
+import {  View,Text,FlatList,TouchableOpacity,StyleSheet,Animated,TextInput   } from "react-native";
 import { Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from '@react-navigation/native';
 
 import Generarpeticion from '../../../Apis/peticiones';
 import Handelstorage from '../../../Storage/handelstorage';
-import Procesando from '../../Procesando/Procesando';
+
 import { AuthContext } from '../../../AuthContext';
 import { FontAwesome } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
@@ -17,18 +17,19 @@ function ListadoFacturas({ navigation }){
     const { colors,fonts } = useTheme();
     const {  actualizarEstadocomponente } = useContext(AuthContext);
     const { estadocomponente } = useContext(AuthContext);
-    const [guardando,setGuardando]=useState(false)
-    const [cargacompleta,setCargacopleta]=useState(false)
     const [datafacturas,setDatafacturas]=useState([])
-    const [rotationValue] = useState(new Animated.Value(0));
-    const [montototaliva,setMontototaliva]=useState(0)
-    const [canttotalfacturas,setCanttotalfacturas]=useState(0)
-    const [montototalfacturas,setMontototalfacturas]=useState(0)
+    // const [rotationValue] = useState(new Animated.Value(0));
+    const [totales, setTotales] = useState({
+      montototaliva: 0,
+      canttotalfacturas: 0,
+      montototalfacturas: 0,
+    });
     const [datafacturacompleto,setDatafacturacompleto]=useState([])
 
     const [busqueda,setBusqueda]=useState(false)
     const [textobusqueda,setTextobusqueda]=useState('')
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
     const [visibledialogo, setVisibledialogo] = useState(false)
     const[mensajeerror,setMensajeerror]=useState('')
     const showDialog = () => setVisibledialogo(true);
@@ -45,82 +46,67 @@ function ListadoFacturas({ navigation }){
   
     const selecionar_registro =(detaraeg)=>{
       
-      let estructura = {
-        Conceptos: {},
-        DataEmpresa: {
-          "Empresa": detaraeg.NombreEmpresa,
-          "NroRuc": detaraeg.RucEmpresa
-        },
-        DataFactura:{
-          "FechaOperacion":detaraeg.fecha_factura,
-          "NroFactura":detaraeg.numero_factura
-        },
-        DataMontos:{
-          "total_operacion":detaraeg.total_factura,
-          "liq_iva10":detaraeg.iva10,
-          "liq_iva5":detaraeg.iva5,
-          "total_iva":detaraeg.liquidacion_iva
-        },
-        Datosregistro:{
-          "Fecharegistro":detaraeg.fecha_registro,
-          "IdOperacion":detaraeg.id.toString(),
-          "FormaRegistro":detaraeg.tipo_registro
-        }
+      // let estructura = {
+      //   Conceptos: {},
+      //   DataEmpresa: {
+      //     "Empresa": detaraeg.NombreEmpresa,
+      //     "NroRuc": detaraeg.RucEmpresa
+      //   },
+      //   DataFactura:{
+      //     "FechaOperacion":detaraeg.fecha_factura,
+      //     "NroFactura":detaraeg.numero_factura
+      //   },
+      //   DataMontos:{
+      //     "total_operacion":detaraeg.total_factura,
+      //     "liq_iva10":detaraeg.iva10,
+      //     "liq_iva5":detaraeg.iva5,
+      //     "total_iva":detaraeg.liquidacion_iva
+      //   },
+      //   Datosregistro:{
+      //     "Fecharegistro":detaraeg.fecha_registro,
+      //     "IdOperacion":detaraeg.id.toString(),
+      //     "FormaRegistro":detaraeg.tipo_registro
+      //   }
 
-      };
+      // };
 
-      detaraeg.DetalleFactura.forEach((detalle, index) => {
-        // Generar un nombre de ítem dinámico: Item_1, Item_2, ...
-        let itemKey = `Item_${index + 1}`;
+      // detaraeg.DetalleFactura.forEach((detalle, index) => {
+      //   // Generar un nombre de ítem dinámico: Item_1, Item_2, ...
+      //   let itemKey = `Item_${index + 1}`;
     
-        // Asignar los valores correspondientes
-        estructura.Conceptos[itemKey] = {
-          "dAntGloPreUniIt": "",
-          "dAntPreUniIt": "",
-          "dBasExe": "",
-          "dBasGravIVA": "",
-          "dCantProSer": detalle.cantidad,
-          "dCodInt": "",
-          "dDesAfecIVA": "",
-          "dDesProSer": detalle.concepto,
-          "dDesUniMed": "",
-          "dDescGloItem": "",
-          "dDescItem": "",
-          "dLiqIVAItem": "",
-          "dPUniProSer": "",
-          "dPorcDesIt": "",
-          "dPropIVA": "",
-          "dTasaIVA": "",
-          "dTotBruOpeItem": "",
-          "dTotOpeItem": detalle.total,
-          "iAfecIVA": ""
-        };
-      });
+      //   // Asignar los valores correspondientes
+      //   estructura.Conceptos[itemKey] = {
+      //     "dAntGloPreUniIt": "",
+      //     "dAntPreUniIt": "",
+      //     "dBasExe": "",
+      //     "dBasGravIVA": "",
+      //     "dCantProSer": detalle.cantidad,
+      //     "dCodInt": "",
+      //     "dDesAfecIVA": "",
+      //     "dDesProSer": detalle.concepto,
+      //     "dDesUniMed": "",
+      //     "dDescGloItem": "",
+      //     "dDescItem": "",
+      //     "dLiqIVAItem": "",
+      //     "dPUniProSer": "",
+      //     "dPorcDesIt": "",
+      //     "dPropIVA": "",
+      //     "dTasaIVA": "",
+      //     "dTotBruOpeItem": "",
+      //     "dTotOpeItem": detalle.total,
+      //     "iAfecIVA": ""
+      //   };
+      // });
     
       // Imprimir la nueva estructura
-      actualizarEstadocomponente('datafactura',estructura)
+      actualizarEstadocomponente('datafactura',detaraeg)
       actualizarEstadocomponente('factura_editar',detaraeg.id)
       navigate("DetalleFactura")
     }
 
-    const openbusqueda =()=>{
-      setBusqueda(true);
-    // Inicia la animación para mostrar el cuadro de búsqueda
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 700, // Duración de la animación en milisegundos
-      useNativeDriver: false,
-    }).start();
-    }
+    
 
-    const closebusqueda=()=>{
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: false,
-      }).start(() => setBusqueda(false));
-      realizarbusqueda('')
-    }    
+      
     const realizarbusqueda = (palabra) => {
         
         
@@ -151,133 +137,197 @@ function ListadoFacturas({ navigation }){
             item.numero_factura.toLowerCase().includes(pal) ||
             item.NombreEmpresa.toLowerCase().includes(pal)
         );
+        formateo_data_facturas(arrayencontrado)
+        
+    }
+    const openbusqueda =()=>{
+      setBusqueda(true);
+      // Inicia la animación para mostrar el cuadro de búsqueda
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 700, // Duración de la animación en milisegundos
+        useNativeDriver: false,
+      }).start();
+      }
 
-        setDatafacturas(arrayencontrado);
+    const closebusqueda=()=>{
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: false,
+      }).start(() => setBusqueda(false));
+      realizarbusqueda('')
+    }
+    ;
+
+   
+        // Interpola el valor de rotación para aplicarlo al estilo de transformación del icono
+    const formatNumber = (num) => {
+          return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        };
+ 
+    const formateo_data_facturas =(data,data_totales,formatear)=>{
+      if (formatear){
+        
+          const formateado= data.map(item => ({
+            ...item, // Copia todas las propiedades del objeto original
+            liquidacion_iva: formatNumber(item.liquidacion_iva), // Aplica la expresión regular
+            total_factura: formatNumber(item.total_factura), // Aplica la expresión regular
+            iva10: formatNumber(item.iva10), // Aplica la expresión regular
+            iva5: formatNumber(item.iva5), // Aplica la expresión regular
+          }));
+          const formateado_totales = {
+            ...data_totales, // Copia todas las propiedades del objeto original
+            montototaliva: formatNumber(data_totales.montototaliva), // Formatea montototaliva
+            montototalfacturas: formatNumber(data_totales.montototalfacturas), // Formatea montototalfacturas
+          };
+          const detalle_resumen = [{lista:formateado}, { valores_resumen: formateado_totales }];
+          setDatafacturas(formateado)
+          setDatafacturacompleto(formateado)
+          setTotales(formateado_totales)
+          actualizarEstadocomponente('datalistadofactura',detalle_resumen)
+      }else{
+        
+        const valoreslista = data.find(item => item.lista);
+        const valoresResumen = data.find(item => item.valores_resumen);
+        
+        setDatafacturas(valoreslista['lista'])
+        setDatafacturacompleto(valoreslista['lista'])
+        setTotales(valoresResumen['valores_resumen'])
+       
+      }
+      
     }
 
-    const handlePress = () => {
-            
-          Animated.timing(rotationValue, {
-            toValue: 1,
-            duration: 200, // Duración de la animación en milisegundos
-            useNativeDriver: true,
-          }).start(() => {
-            // Restaura la animación a su estado original
-            rotationValue.setValue(0);
-          });
-          const item={'id':0}
-          navigate("StackCargaOpciones", { })
-          
-     };
-      
-        // Interpola el valor de rotación para aplicarlo al estilo de transformación del icono
-    const spin = rotationValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '360deg'],
-    } 
-    );
+    
+
+ 
+    
+
+    const FacturaItem = memo(({ item, selecionar_registro, colors, fonts, styles }) => {
+      return (
+        <TouchableOpacity
+          style={styles.contenedordatos}
+          onPress={() => selecionar_registro(item)}
+        >
+          <View style={styles.row}>
+            <View style={{ flex: 3 }}>
+              <Text style={[styles.textocontenido, { color: colors.text, fontFamily: fonts.regular.fontFamily }]}>
+                N° Factura: {item.numero_factura}
+              </Text>
+              <Text style={[styles.textocontenido, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                {item.NombreEmpresa}
+              </Text>
+              <Text style={[styles.textocontenido, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                {item.RucEmpresa}
+              </Text>
+            </View>
+    
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              <Text style={[styles.textototal, { color: colors.text, fontFamily: fonts.regularbold.fontFamily }]}>
+                Liq.: {item.liquidacion_iva}
+              </Text>
+              <Text style={[styles.textocontenido, { color: colors.textsub, fontFamily: fonts.regular.fontFamily, marginTop: 5 }]}>
+                {item.total_factura} Gs.
+              </Text>
+              <Text style={[styles.textocontenido, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                {item.fecha_factura}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    });
+
+
+    
+
+
 
     useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', () => {
-          
-          setCargacopleta(false)
-          actualizarEstadocomponente('factura_editar',0)
-          const cargardatos=async()=>{
-            if (estadocomponente.qrdetected){
-              navigate("CargaArchivoXml", { })
-            }else{
+      const unsubscribe = navigation.addListener('focus', () => {
+        //console.log('Listado',estadocomponente.complistado)
+        //setCargacopleta(false)
+        actualizarEstadocomponente('factura_editar',0)
+        const cargardatos=async()=>{
+          if (estadocomponente.qrdetected){
+            navigate("CargaArchivoXml", { })
+          }else{
+            
+            if(!estadocomponente.complistado){
               
-              if(estadocomponente.complistado){
+              formateo_data_facturas(estadocomponente.datalistadofactura,[],false)
+ 
+            }else{
+                  
+              actualizarEstadocomponente('tituloloading','CARGANDO LISTADO..')
+              actualizarEstadocomponente('loading',true)
+              
+              const datestorage=await Handelstorage('obtenerdate');
+              const anno_storage=datestorage['dataanno']
+              const mes_storage=datestorage['datames']
+              const body = {};
+              const endpoint='MovimientosFacturas/' + anno_storage +'/' + mes_storage + '/0/'
+              const result = await Generarpeticion(endpoint, 'POST', body);
 
-                  actualizarEstadocomponente('tituloloading','CARGANDO LISTADO..')
-                  actualizarEstadocomponente('loading',true)
-                  
-                  const datestorage=await Handelstorage('obtenerdate');
-                  const anno_storage=datestorage['dataanno']
-                  const mes_storage=datestorage['datames']
-                  const body = {};
-                  const endpoint='MovimientosFacturas/' + anno_storage +'/' + mes_storage + '/0/'
-                  const result = await Generarpeticion(endpoint, 'POST', body);
-    
-                  actualizarEstadocomponente('tituloloading','')
-                  actualizarEstadocomponente('loading',false)
-                  const respuesta=result['resp']
-                  
-                  if (respuesta === 200){
-                      const registros=result['data']
-                      actualizarEstadocomponente('complistado',false)
-                      actualizarEstadocomponente('datalistadofactura',registros)
-                      
-                      if(Object.keys(registros).length>0){
-                          registros.forEach((elemento) => {
-                            
-                            elemento.key = elemento.id;
-                            elemento.recarga='no'
-                          })
-                      }
-      
-                      setDatafacturas(registros)
-                      setDatafacturacompleto(registros)
-                      let totaliva=0
-                      let cantfac=0
-                      let totalfac=0
-                      registros.forEach(({ liquidacion_iva,total_factura }) => {totaliva += liquidacion_iva,cantfac+=1,totalfac+=total_factura})
-                      setMontototaliva(totaliva)
-                      setCanttotalfacturas(cantfac)
-                      setGuardando(false)
-                      setMontototalfacturas(totalfac)
-                      
-                    
-                      
-                      
-                  }else if(respuesta === 403 || respuesta === 401){
-                      
-                      setGuardando(false)
-                      await Handelstorage('borrar')
-                      await new Promise(resolve => setTimeout(resolve, 1000))
-                      setActivarsesion(false)
-                  }else{
-                    showDialog(true)
-                    setMensajeerror( handleError(result['data']['error']))
+              actualizarEstadocomponente('tituloloading','')
+              actualizarEstadocomponente('loading',false)
+              const respuesta=result['resp']
+              
+              if (respuesta === 200){
+                  const registros=result['data']
+                  actualizarEstadocomponente('complistado',false)
+                 
+                  if(Object.keys(registros).length>0){
+                      registros.forEach((elemento) => {
+                        
+                        elemento.key = elemento.id;
+                        elemento.recarga='no'
+                      })
                   }
+                  let totaliva=0
+                  let cantfac=0
+                  let totalfac=0
+                  registros.forEach(({ liquidacion_iva,total_factura }) => {totaliva += liquidacion_iva,cantfac+=1,totalfac+=total_factura})
+                  const data_totales={
+                    montototaliva: totaliva,
+                    canttotalfacturas: cantfac,
+                    montototalfacturas: totalfac,
+                  }
+                  formateo_data_facturas(registros,data_totales,true)
+                  
+                  setGuardando(false)
+              }else if(respuesta === 403 || respuesta === 401){
+                  
+                  setGuardando(false)
+                  await Handelstorage('borrar')
+                  await new Promise(resolve => setTimeout(resolve, 1000))
+                  setActivarsesion(false)
               }else{
-                const registros=estadocomponente.datalistadofactura
-                if(Object.keys(registros).length>0){
-                    registros.forEach((elemento) => {
-                      
-                      elemento.key = elemento.id;
-                      elemento.recarga='no'
-                    })
-                }
-
-                setDatafacturas(registros)
-                setDatafacturacompleto(registros)
-                let totaliva=0
-                let cantfac=0
-                let totalfac=0
-                registros.forEach(({ liquidacion_iva,total_factura }) => {totaliva += liquidacion_iva,cantfac+=1,totalfac+=total_factura})
-                setMontototaliva(totaliva)
-                setCanttotalfacturas(cantfac)
-                setGuardando(false)
-                setMontototalfacturas(totalfac)
+                showDialog(true)
+                setMensajeerror( handleError(result['data']['error']))
               }
+             
+             
             }
+            
           }
-          cargardatos()
-          setCargacopleta(true)
-          setGuardando(false)
-          
-        })
-        return unsubscribe;
-  
-        }, [navigation,estadocomponente.complistado]);
-    if(cargacompleta){
+        }
+        cargardatos()
+        //setCargacopleta(true)
+        //setGuardando(false)
+        
+      })
+     return unsubscribe;
+
+      }, [navigation,estadocomponente.complistado]);
+    
 
         return(
           <PaperProvider >
 
             <View style={{ flex: 1 }}>
-              {guardando &&(<Procesando></Procesando>)}
+              
               <Portal>
               
                     <Dialog visible={visibledialogo} onDismiss={hideDialog}>
@@ -297,41 +347,37 @@ function ListadoFacturas({ navigation }){
 
                 <View style={[styles.cabeceracontainer,{backgroundColor:colors.card}]}>
 
-                {!busqueda &&( 
-                        <TouchableOpacity onPress={openbusqueda}>
-                            
-                            <FontAwesome name="search" size={24} color={colors.iconcolor}/>
-                            
-                        </TouchableOpacity>
-                )}
+                  {!busqueda &&( 
+                          <TouchableOpacity onPress={openbusqueda}>
+                              
+                              <FontAwesome name="search" size={24} color={colors.iconcolor}/>
+                              
+                          </TouchableOpacity>
+                  )}
 
-                {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Facturas Registradas</Text>)}
-                {busqueda &&(
+                  {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Facturas Registradas</Text>)}
+                  {busqueda &&(
 
-                <Animated.View style={{ borderWidth:1,backgroundColor:'rgba(28,44,52,0.1)',borderRadius:10,borderColor:'white',flexDirection: 'row',alignItems: 'center',width:'80%',opacity: fadeAnim}}>
-                  <TextInput 
-                        style={{color:'white',padding:5,flex: 1,fontFamily:fonts.regular.fontFamily}} 
-                        placeholder="N° Factura o Empresa.."
-                        placeholderTextColor='gray'
-                        value={textobusqueda}
-                        onChangeText={textobusqueda => realizarbusqueda(textobusqueda)}
-                        >
+                  <Animated.View style={{ borderWidth:1,backgroundColor:'rgba(28,44,52,0.1)',borderRadius:10,borderColor:'white',flexDirection: 'row',alignItems: 'center',width:'80%',opacity: fadeAnim}}>
+                    <TextInput 
+                          style={{color:'white',padding:5,flex: 1,fontFamily:fonts.regular.fontFamily}} 
+                          placeholder="N° Factura o Empresa.."
+                          placeholderTextColor='gray'
+                          value={textobusqueda}
+                          onChangeText={textobusqueda => realizarbusqueda(textobusqueda)}
+                          >
 
-                  </TextInput>
+                    </TextInput>
 
-                  <TouchableOpacity style={{ position: 'absolute',right: 10,}} onPress={closebusqueda} >  
-                    <AntDesign name="closecircleo" size={20} color={colors.iconcolor} />
-                  </TouchableOpacity>
-                </Animated.View>
-                )
-                }
-                  
-                {/* <TouchableOpacity style={[styles.botoncabecera,{ backgroundColor:'#57DCA3'}]} onPress={handlePress}>
-                    <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                        <FontAwesome6 name="add" size={24} color="white" />
-                    </Animated.View>
-                </TouchableOpacity> */}
-            </View>
+                    <TouchableOpacity style={{ position: 'absolute',right: 10,}} onPress={closebusqueda} >  
+                      <AntDesign name="closecircleo" size={20} color={colors.iconcolor} />
+                    </TouchableOpacity>
+                  </Animated.View>
+                  )
+                  }
+                    
+      
+                </View>
 
 
 
@@ -340,75 +386,19 @@ function ListadoFacturas({ navigation }){
                 <View style={styles.container}>
                   <FlatList
                     data={datafacturas}
-                    renderItem={({ item }) => {
-                      return (
-                        <TouchableOpacity
-                          style={styles.contenedordatos}
-                          // onPress={() => {navigate('GastosDetalle', { item });}}
-                          onPress={() => {selecionar_registro(item)  }}
-                          
-                        >
-                          {/* Contenedor principal con alineación horizontal */}
-                          <View style={styles.row}>
-                            {/* Columna izquierda */}
-                            <View style={{ flex: 3 }}>
-                              <Text
-                                style={[
-                                  styles.textocontenido,
-                                  { color: colors.text, fontFamily: fonts.regular.fontFamily },
-                                ]}
-                              >
-                                N° Factura: {item.numero_factura}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.textocontenido,
-                                  { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
-                                ]}
-                              >
-                                {item.NombreEmpresa}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.textocontenido,
-                                  { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
-                                ]}
-                              >
-                                {item.RucEmpresa}
-                              </Text>
-                            </View>
-
-                            {/* Columna derecha */}
-                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                              <Text
-                                style={[
-                                  styles.textototal,
-                                  { color: colors.text, fontFamily: fonts.regularbold.fontFamily  },
-                                ]}
-                              >
-                                Liq.: {Number(item.liquidacion_iva).toLocaleString('es-ES')}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.textocontenido,
-                                  { color: colors.textsub, fontFamily: fonts.regular.fontFamily,marginTop:5 },
-                                ]}
-                              >
-                                {Number(item.total_factura).toLocaleString('es-ES')} Gs.
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.textocontenido,
-                                  { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
-                                ]}
-                              >
-                                {item.fecha_factura}
-                              </Text>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    }}
+                    initialNumToRender={10}
+                    windowSize={21}
+                    maxToRenderPerBatch={10}
+                    updateCellsBatchingPeriod={50}
+                    getItemLayout={(data, index) => ({
+                      length: 100,
+                      offset: 100 * index,
+                      index,
+                    })}
+                    removeClippedSubviews={true}
+                    renderItem={({ item }) => (
+                      <FacturaItem item={item} selecionar_registro={selecionar_registro} colors={colors} fonts={fonts} styles={styles} />
+                    )}
                     keyExtractor={(item) => item.key}
                   />
                 </View>
@@ -417,18 +407,18 @@ function ListadoFacturas({ navigation }){
 
                       <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
                               <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Total Facturas:</Text>{' '}
-                                {Number(montototalfacturas).toLocaleString('es-ES')} Gs.
+                                {totales.montototalfacturas} Gs.
                       </Text>
 
                       <View style={{flexDirection:'row',justifyContent: "space-between"}}>
 
                         <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
                           <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Total Liq IVA:</Text>{' '}
-                            {Number(montototaliva).toLocaleString('es-ES')} Gs.
+                            {totales.montototaliva} Gs.
                         </Text>
                         <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily,marginLeft:50}]}>
                           <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Cant Fact:</Text>{' '}
-                            {Number(canttotalfacturas).toLocaleString('es-ES')}
+                            {totales.canttotalfacturas}
                         </Text>
                       </View>
                       
@@ -442,7 +432,7 @@ function ListadoFacturas({ navigation }){
         
       )
     
-    }
+    
 }
 const styles = StyleSheet.create({
    

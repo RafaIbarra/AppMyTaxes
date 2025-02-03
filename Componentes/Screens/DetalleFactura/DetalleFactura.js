@@ -30,7 +30,13 @@ function DetalleFactura({ navigation }){
     const [conceptos,setConceptos]=useState('')
     const [cantidadconceptos,setCantidadconceptos]=useState(0)
     const [liqiva10,setLiqiva10]=useState('')
-    const [datamontos,setDatamontos]=useState([])
+    const [datamontos,setDatamontos]=useState({
+      total_operacion: 0,
+      liq_iva10: 0,
+      liq_iva5: 0,
+      total_iva:0
+    })
+    const [cdcarchivo,setCdcarchivo]=useState('')
     
     const { navigate } = useNavigation();
 
@@ -60,15 +66,17 @@ function DetalleFactura({ navigation }){
 
     const volver=()=>{
       
-      navigation.navigate('MainTabs2', {
-        screen: 'ListadoFacturas', // Nombre exacto de la pantalla en el Tab
-      });
+      // navigation.navigate('MainTabs2', {
+      //   screen: 'ListadoFacturas', // Nombre exacto de la pantalla en el Tab
+      // });
+      
+      navigation.goBack();
       
     }
     const editar_registro =()=>{
       
       
-      if(estadocomponente.datafactura.Datosregistro.FormaRegistro.toLowerCase()==='manual'){
+      if(detallefactura.tipo_registro.toLowerCase()==='manual'){
         
         // navigation.navigate('StackCargaOpciones', {
         //   screen: 'Manual', // Nombre exacto de la pantalla en el Tab
@@ -117,9 +125,9 @@ function DetalleFactura({ navigation }){
       actualizarEstadocomponente('tituloloading','REGISTRANDO FACTURA..')
       actualizarEstadocomponente('loading',true)
       const detallefactura = conceptos.map(item => ({
-        concepto: item.dDesProSer,
-        cantidad: item.dCantProSer,
-        total: Number(item.dTotOpeItem)
+        concepto: item.concepto,
+        cantidad: item.cantidad,
+        total: Number(item.total)
       }));
       
       const jsonData = JSON.stringify(detallefactura);
@@ -131,11 +139,14 @@ function DetalleFactura({ navigation }){
         nombreempresa:nombreempresa,
         numero_factura:nrofactura,
         fecha_factura:fechaFormateada,
-        total_factura:datamontos.monto_operacion,
+
+        total_factura:datamontos.total_operacion,
         iva10:datamontos.liq_iva10,
         iva5:datamontos.liq_iva5,
         liquidacion_iva:datamontos.total_iva,
+
         cdc:estadocomponente.datocdc.nombrecdc,
+        cdcarchivo:cdcarchivo,
         detallefactura:jsonData,
         tiporegistro:'QR'
         
@@ -210,7 +221,7 @@ function DetalleFactura({ navigation }){
       const tamañoletraheadertabla=12
     useEffect(() => {
         
-        //console.log(estadocomponente.datafactura)
+        
         
         if(estadocomponente.factura_editar >0){
         
@@ -221,56 +232,47 @@ function DetalleFactura({ navigation }){
           
         }
         let cargardetalle=true
-        if (Array.isArray(estadocomponente.datafactura) && estadocomponente.datafactura.length === 0) {
-          cargardetalle=false
-        }
-        if (estadocomponente.datafactura && Object.keys(estadocomponente.datafactura).length=== 0) {
-          cargardetalle=false
-        } 
-
-        if(cargardetalle){
-
-          setDetallefactura(estadocomponente.datafactura)
-          setNombreempresa(estadocomponente.datafactura.DataEmpresa.Empresa)
-          setRucempresa(estadocomponente.datafactura.DataEmpresa.NroRuc)
-          const fechaFormateada = convertirFecha(estadocomponente.datafactura.DataFactura.FechaOperacion);
-          setFechaoperacion(fechaFormateada)
-          setNrofactura(estadocomponente.datafactura.DataFactura.NroFactura)
-          setLiqiva10(estadocomponente.datafactura.DataMontos.liq_iva10)
-          
-          setDatamontos(estadocomponente.datafactura.DataMontos)
-          const conceptos = estadocomponente.datafactura.Conceptos;
-          // console.log(conceptos)
-          const itemCount = Object.keys(conceptos).filter(key => key.startsWith('Item_')).length;
-         
-          setCantidadconceptos(itemCount)
-          const itemsExtraidos = [];
-          for (const key in conceptos) {
-              if (conceptos.hasOwnProperty(key)) {
-                // Obtenemos el item actual
-                const item = conceptos[key];
-            
-                // Extraemos los valores requeridos y los agregamos a un nuevo objeto
-                const itemData = {
-                  key: key, // Añadimos la clave del item correspondiente
-                  dDesProSer: item.dDesProSer,
-                  dCantProSer: item.dCantProSer,
-                  dTotOpeItem: item.dTotOpeItem,
-                };
-            
-                // Agregamos el objeto al arreglo de items extraídos
-                itemsExtraidos.push(itemData);
-              }
-            }
-          //console.log(itemsExtraidos)
-          setConceptos(itemsExtraidos)
-        }
-
         
-        // console.log(!estadocomponente.datafactura)
+        const datacontrol=estadocomponente?.datafactura || {};
+        
+        if (Array.isArray(datacontrol) && datacontrol.length === 0) {
+          cargardetalle=false
+        }
+        if (datacontrol && Object.keys(datacontrol).length=== 0) {
+          cargardetalle=false
+        }
+        if(cargardetalle){
+          const data = estadocomponente?.datafactura || {};
+          setDetallefactura(data);
+          setNombreempresa(data?.NombreEmpresa || '')
+          setRucempresa(data?.RucEmpresa || '')
+          const fechaFormateada = convertirFecha(data?.fecha_factura || '');
+          setFechaoperacion(fechaFormateada)
+          setNrofactura(data?.numero_factura || '')
+          setCdcarchivo(data?.cdc || '')
+          const totales={
+            total_operacion: data?.total_factura || '',
+            liq_iva10: data?.iva10 || '',
+            liq_iva5: data?.iva5 || '',
+            total_iva: data?.liquidacion_iva || '',
+          }
+          setDatamontos(totales)
+          const conceptosreg = data?.DetalleFactura;
+          
+          const conceptosConKey = conceptosreg.map((item, index) => ({
+            ...item,  // Copia todas las propiedades del objeto
+            key: index.toString(),  // Agrega una key única, en este caso usamos el índice
+          }));
+          setCantidadconceptos(conceptos.length)
+          setConceptos(conceptosConKey)
+        }
+        
+        
       }, [detallefactura,estadocomponente.factura_editar,modoedicion]);
-   if (detallefactura){
 
+
+
+   if (detallefactura){
 
     return(
       <PaperProvider >
@@ -383,7 +385,8 @@ function DetalleFactura({ navigation }){
                 <View style={ { height: height * 0.48 }}>
 
                     <View style={{ height: '65%', overflow: 'hidden' }}>
-                      <DataTable>
+
+                    <DataTable>
                         <View style={{ backgroundColor: 'gray', marginLeft: 8, marginRight: 8, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
                           <DataTable.Header>
                             <DataTable.Title style={{ flex: 2 }} textStyle={{ fontSize: tamañoletraheadertabla, fontFamily: fonts.regularbold.fontFamily }}>
@@ -403,18 +406,19 @@ function DetalleFactura({ navigation }){
                           {conceptos.map((item) => (
                             <DataTable.Row key={item.key}>
                               <DataTable.Cell style={{ flex: 2 }} textStyle={{ fontSize: tamañoletratabla, fontFamily: fonts.regular.fontFamily }}>
-                                {item.dDesProSer}
+                                {item.concepto}
                               </DataTable.Cell>
                               <DataTable.Cell textStyle={{ fontSize: tamañoletratabla, fontFamily: fonts.regular.fontFamily }} numeric>
-                                {item.dCantProSer}
+                                {item.cantidad}
                               </DataTable.Cell>
                               <DataTable.Cell textStyle={{ fontSize: tamañoletratabla, fontFamily: fonts.regular.fontFamily }} numeric>
-                                {Number(item.dTotOpeItem).toLocaleString('es-ES')}
+                                {Number(item.total).toLocaleString('es-ES')}
                               </DataTable.Cell>
                             </DataTable.Row>
                           ))}
                         </DataTable>
                       </ScrollView>
+                      
                     </View>
 
                       
@@ -428,16 +432,16 @@ function DetalleFactura({ navigation }){
                             {/* Primera columna */}
                             <View style={[styles.columna, { flex: 1 }]}>
 
-                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Total Factura: {Number(datamontos.total_operacion).toLocaleString('es-ES')}</Text>
-                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Iva 10 %: {Number(datamontos.liq_iva10).toLocaleString('es-ES')}</Text>
-                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Iva 5%: {Number(datamontos.liq_iva5).toLocaleString('es-ES')}</Text>
-                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Cant Conceptos: {Number(cantidadconceptos).toLocaleString('es-ES')}</Text>
+                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Total Factura: {datamontos.total_operacion}</Text>
+                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Iva 10 %: {datamontos.liq_iva10}</Text>
+                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Iva 5%: {datamontos.liq_iva5}</Text>
+                                <Text style={[styles.textocontenido, { color: colors.text,fontFamily: fonts.regular.fontFamily }]}>Cant Conceptos: {cantidadconceptos}</Text>
                             </View>
 
                             {/* Segunda columna */}
                             <View style={[styles.columna, { flex: 1, marginTop: 20 }]}>
                                 <Text style={[styles.textototal, { color: colors.text, fontFamily: fonts.regularbold.fontFamily }]}>
-                                Liq IVA Gs.: {Number(datamontos.total_iva).toLocaleString('es-ES')}
+                                Liq IVA Gs.: {datamontos.total_iva}
                                 </Text>
                             </View>
                             </View>
@@ -463,7 +467,7 @@ function DetalleFactura({ navigation }){
                                 paddingLeft:5
                               }}
                             >
-                              ID Operacion: {estadocomponente.datafactura.Datosregistro.IdOperacion}; {estadocomponente.datafactura.Datosregistro.Fecharegistro}; {estadocomponente.datafactura.Datosregistro.FormaRegistro}
+                              ID Operacion: {estadocomponente.datafactura.id}; {estadocomponente.datafactura.fecha_registro}; {estadocomponente.datafactura.tipo_registro}
                             </Text>
 
 
@@ -570,7 +574,7 @@ function DetalleFactura({ navigation }){
         </View>
       </PaperProvider>
     )
-
+     
 } 
 
     
@@ -611,7 +615,7 @@ const styles = StyleSheet.create({
         marginLeft:5,
         borderRadius:15,
         overflow: 'hidden', 
-        height: 100,
+        height: 110,
         padding: 10,
         
         

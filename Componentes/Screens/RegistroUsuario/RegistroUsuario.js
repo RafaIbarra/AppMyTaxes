@@ -1,7 +1,7 @@
 import React,{useState, useContext } from "react";
-import {View,Text,StyleSheet,TextInput,TouchableOpacity,ScrollView  } from "react-native";
+import {View,Text,StyleSheet,Alert,TouchableOpacity,ScrollView  } from "react-native";
 // import DateTimePickerModal from "react-native-modal-datetime-picker";
-// import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import moment from 'moment';
 
 import { Button, Dialog, Portal,PaperProvider } from 'react-native-paper';
@@ -10,11 +10,13 @@ import { useTheme } from '@react-navigation/native';
 
 import { AntDesign } from '@expo/vector-icons'
 
-
+import CustomTextInput from "../../CustomTextInput/CustomTextInput";
 import Handelstorage from "../../../Storage/handelstorage";
 import ScreensCabecera from "../../ScreensCabecera/ScreensCabecera";
 import ApiRegistroUsuario from "../../../Apis/apiregistrousuario";
 import { AuthContext } from "../../../AuthContext";
+
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 function RegistroUsuario({ navigation  }){
     const[title,setTitle]=useState('REGISTRO USUARIO')
@@ -26,214 +28,172 @@ function RegistroUsuario({ navigation  }){
 
     const { colors,fonts } = useTheme();
     const { navigate } = useNavigation();
-    const [guardando,setGuardando]=useState(false)
+    
 
     const [nombre,setNombre]=useState('')
-    const [isFocusednombre, setIsFocusednombre] = useState(false);
-    const [focusnombre, setFocusnombre] = useState(false);
-
-
     const [apellido,setApellido]=useState('')
-    const [isFocusedapellido, setIsFocusedapellido] = useState(false);
-    const [focusapellido, setFocusapellido] = useState(false);
-
-    const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-    const [fechanac,setFechanac]=useState('')
-
+    const [fechanac,setFechanac]=useState(new Date());
+    const [show, setShow] = useState(false);
     const [username,setUsername]=useState('')
-    const [isFocusedusername, setIsFocusedusername] = useState(false);
-    const [focususername, setFocususername] = useState(false);
-
     const [correo,setCorreo]=useState('')
-    const [isFocusedcorreo, setIsFocusedcorreo] = useState(false);
-    const [focuscorreo, setFocuscorreo] = useState(false);
-
     const [ruc,setRuc]=useState('')
-    const [isFocusedruc, setIsFocusedruc] = useState(false);
-    const [focusruc, setFocusruc] = useState(false);
-
     const [digitoverificador,setDigitoverificador]=useState('')
-    const [isFocuseddigitoverificador, setIsFocuseddigitoverificador] = useState(false);
-    const [focusdigitoverificador, setFocusdigitoverificador] = useState(false);
-
     const [fantasia,setFantasia]=useState('')
-    const [isFocusedfantasia, setIsFocusedfantasia] = useState(false);
-    const [focusfantasia, setFocusfantasia] = useState(false);
 
-    const [pass,setPass]=useState('')
-    const [isFocusedpass, setIsFocusedpass] = useState(false);
-    const [focuspass, setFocuspass] = useState(false);
+
 
     const [visibledialogo, setVisibledialogo] = useState(false)
     const[mensajeerror,setMensajeerror]=useState('')
+    const [pass,setPass]=useState('')
+    const[mostrarContrasena,setMostrarContrasena]=useState(true)
+
+    const [pass2,setPass2]=useState('')
+    const[mostrarContrasena2,setMostrarContrasena2]=useState(true)
+    
 
     const showDialog = () => setVisibledialogo(true);
     const hideDialog = () => setVisibledialogo(false);
 
-
-    const textonombre=(valor)=>{
-        setNombre(valor)
-        if (!focusnombre && valor !== '') {
-            setFocusnombre(true);
-        } else if (focusnombre && valor === '') {
-            setFocusnombre(false);
-        }
-
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || fechanac;
+        setShow(false); // Para iOS, mantener el picker abierto
+        setFechanac(currentDate); // Guardar la fecha seleccionada
         
-      }
+      };
 
-    const textoapellido=(valor)=>{
-        setApellido(valor)
-        if (!focusapellido && valor !== '') {
-            setFocusapellido(true);
-        } else if (focusapellido && valor === '') {
-            setFocusapellido(false);
+    const calcularDV = (cedula) => {
+        cedula = cedula.replace(/\./g, "").trim(); // Remueve puntos y espacios
+        const pesos = [2, 3, 4, 5, 6, 7]; // Pesos usados en el cálculo
+        let suma = 0;
+        let indicePeso = 0;
+    
+        // Recorre la cédula de derecha a izquierda
+        for (let i = cedula.length - 1; i >= 0; i--) {
+            suma += parseInt(cedula[i]) * pesos[indicePeso];
+            indicePeso = (indicePeso + 1) % pesos.length; // Ciclo de pesos
         }
-      }
+    
+        let resto = suma % 11;
+        let dv = 11 - resto;
+    
+        if (dv === 11) dv = 0;
+        if (dv === 10) dv = "K"; // En algunos sistemas se usa "K", en otros "1"
+    
+        return dv;
+    };
+
+
+
+ 
 
     const showDatePicker = () => {
-        setDatePickerVisibility(true);
+        setShow(true); // Mostrar el picker
       };
    
-    const hideDatePicker = () => {
-        setDatePickerVisibility(false);
-      };
+  
     
-    const handleConfirm = (date) => {
-        
-        const fechaFormateada = new Date(date).toISOString().split('T')[0]
-        
-        setFechanac(fechaFormateada)
-        hideDatePicker();
-      };
-
-    const textousername=(valor)=>{
-        setUsername(valor)
-        if (!focususername && valor !== '') {
-            setFocususername(true);
-        } else if (focususername && valor === '') {
-            setFocususername(false);
-        }
-        setRuc(0)
-        setDigitoverificador(0)
-        setFantasia(valor)
-      }
-
-    const textocorreo=(valor)=>{
-        setCorreo(valor)
-        if (!focuscorreo && valor !== '') {
-            setFocuscorreo(true);
-        } else if (focuscorreo && valor === '') {
-            setFocuscorreo(false);
-        }
-      }
-
     const textoruc=(valor)=>{
         setRuc(valor)
-        if (!focusruc && valor !== '') {
-            setFocusruc(true);
-        } else if (focusruc && valor === '') {
-            setFocusruc(false);
-        }
+        const div=calcularDV(valor)
+        
+        setDigitoverificador(div.toString())
       }
 
-    const textodigito=(valor)=>{
-        setDigitoverificador(valor)
-        if (!focusdigitoverificador && valor !== '') {
-            setFocusdigitoverificador(true);
-        } else if (focusdigitoverificador && valor === '') {
-            setFocusdigitoverificador(false);
-        }
-      }
+    const toggleMostrarContrasena = () => {
+        
+        setMostrarContrasena(!mostrarContrasena);
+      };
+      const toggleMostrarContrasena2 = () => {
+        
+        setMostrarContrasena2(!mostrarContrasena2);
+      };
 
-    const textofantasia=(valor)=>{
-        setFantasia(valor)
-        if (!focusfantasia && valor !== '') {
-            setFocusfantasia(true);
-        } else if (focusfantasia && valor === '') {
-            setFocusfantasia(false);
-        }
-      }
 
-    const textopass=(valor)=>{
-        setPass(valor)
-        if (!focuspass && valor !== '') {
-            setFocuspass(true);
-        } else if (focuspass && valor === '') {
-            setFocuspass(false);
-        }
-      }
-    const volver=()=>{
-        navigate("Login")
-    }
+ 
+
+
+
+
+
 
     const registrar = async()=>{
-        setGuardando(true)
-        actualizarEstadocomponente('tituloloading','REGISTRANDO NUEVO USUARIO..')
-        actualizarEstadocomponente('loading',true)
-        const datosregistrar = {
-            nombre:nombre,
-            apellido:apellido,
-            nacimiento:'2020-01-01',
-            user:username,
-            correo:correo,
-            ruc:ruc,
-            div:digitoverificador,
-            nombre_fantasia:fantasia,
-            password:pass
-            
 
-        };
-
-        
-        const datos =await ApiRegistroUsuario(datosregistrar)
-        
-        if(datos['resp']===200){
+        if(pass===pass2){
             
             
-            const userdata={
-                token:datos['data']['token'],
-                sesion:datos['data']['sesion'],
-                refresh:datos['data']['refresh'],
-                user_name:datos['data']['user_name'],
-            }
-            
-            await Handelstorage('agregar',userdata,'')
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            const datestorage=await Handelstorage('obtenerdate');
-            const mes_storage=datestorage['datames']
-            const anno_storage=datestorage['dataanno']
-            
-            setPeriodo(datestorage['dataperiodo'])
-            if(mes_storage ===0 || anno_storage===0){
-
-                await new Promise(resolve => setTimeout(resolve, 1500))
+            actualizarEstadocomponente('tituloloading','REGISTRANDO NUEVO USUARIO..')
+            actualizarEstadocomponente('loading',true)
+            const fechaFormateada= moment(fechanac).format('YYYY-MM-DD')
+            const datosregistrar = {
+                nombre:nombre,
+                apellido:apellido,
+                nacimiento:fechaFormateada,
+                user:username,
+                correo:correo,
+                ruc:ruc,
+                div:digitoverificador,
+                nombre_fantasia:fantasia,
+                password:pass
                 
-                const datestorage2=await Handelstorage('obtenerdate');
-                
-                setPeriodo(datestorage2['dataperiodo'])
 
-            }
-            setGuardando(false)
+            };
+
+            
+            const datos =await ApiRegistroUsuario(datosregistrar)
             actualizarEstadocomponente('tituloloading','')
             actualizarEstadocomponente('loading',false)
-            setSesiondata(datos['data']['datauser'])
-            setActivarsesion(true)
+
+            if(datos['resp']===200){
+                
+                
+                const userdata={
+                    token:datos['data']['token'],
+                    sesion:datos['data']['sesion'],
+                    refresh:datos['data']['refresh'],
+                    user_name:datos['data']['user_name'],
+                }
+                
+                await Handelstorage('agregar',userdata,'')
+                await new Promise(resolve => setTimeout(resolve, 2000))
+                const datestorage=await Handelstorage('obtenerdate');
+                const mes_storage=datestorage['datames']
+                const anno_storage=datestorage['dataanno']
+                
+                setPeriodo(datestorage['dataperiodo'])
+                if(mes_storage ===0 || anno_storage===0){
+
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                    
+                    const datestorage2=await Handelstorage('obtenerdate');
+                    
+                    setPeriodo(datestorage2['dataperiodo'])
+
+                }
+                
+                setSesiondata(datos['data']['datauser'])
+                actualizarEstadocomponente('tituloloading','')
+                actualizarEstadocomponente('loading',false)
+                setActivarsesion(true)
+            }else{
+                
+                
+                const errores=datos['data']['error']
+                
+                let mensajeerror = '';
+                for (let clave in errores) {
+                    mensajeerror += `${clave}: ${errores[clave]}. `;
+                }
+
+                showDialog(true)
+                setMensajeerror(mensajeerror)
+                
+
+            }
+
         }else{
-            setGuardando(false)
-            const errores=datos['data']['error']
-            
-            let mensajeerror = 'Errores: ';
-            for (let clave in errores) {
-                mensajeerror += `${clave}: ${errores[clave]}. `;
-            }
-
-            setMensajeerror(mensajeerror)
-            actualizarEstadocomponente('tituloloading','')
-            actualizarEstadocomponente('loading',false)
-            showDialog(true)
-
+            Alert.alert("Contraseñas", "Las contraseñas deben coincidir.");
         }
+        
     }
     return(
         
@@ -260,132 +220,125 @@ function RegistroUsuario({ navigation  }){
                         <View style={{flex:1,marginTop:20}}>
                             <ScrollView style={{padding:5,maxHeight:'85%',marginLeft:10,marginRight:10}}>
 
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusednombre ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Nombres'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={nombre}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={nombre => textonombre(nombre)}
-                                                        onFocus={() => setIsFocusednombre(true)}
-                                                        onBlur={() => setIsFocusednombre(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedapellido ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Apellidos'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={apellido}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={apellido => textoapellido(apellido)}
-                                                        onFocus={() => setIsFocusedapellido(true)}
-                                                        onBlur={() => setIsFocusedapellido(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
-
-                                {/* <View style={{ flexDirection: 'row', alignItems:'stretch' }}>
-                                    
-                                    <Text style={[styles.inputtextactivo, 
-                                                    { width:'50%',
-                                                    fontFamily: fonts.regular.fontFamily,
-                                                    color: fechanac ? colors.text : 'gray',
-                                                    borderBottomColor: fechanac ? colors.textbordercoloractive : colors.textbordercolorinactive}]} 
-                                        onPress={showDatePicker} >
-                                        {fechanac ? moment(fechanac).format('DD/MM/YYYY') : 'Fecha Nacimiento'}
+                                
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="Nombres"
+                                        value={nombre} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setNombre}
                                         
-                                        </Text>
-                    
-                                    <TouchableOpacity 
-                                        style={styles.botonfecha} 
-                                        onPress={showDatePicker}>         
-                                        <AntDesign name="calendar" size={30} color={colors.acctionsbotoncolor} />
-                                    </TouchableOpacity>
-                    
-                                    <DateTimePicker
-                                        
-                                        isVisible={isDatePickerVisible}
-                                        mode="date"
-                                        onConfirm={handleConfirm}
-                                        onCancel={hideDatePicker}
                                     />
-                    
                                 </View>
-         */}
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedusername ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='User Name'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={username}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={username => textousername(username)}
-                                                        onFocus={() => setIsFocusedusername(true)}
-                                                        onBlur={() => setIsFocusedusername(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedcorreo ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Correo Electronico'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={correo}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={correo => textocorreo(correo)}
-                                                        onFocus={() => setIsFocusedcorreo(true)}
-                                                        onBlur={() => setIsFocusedcorreo(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
-{/* 
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedusername ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Ruc'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={ruc}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={ruc => textoruc(ruc)}
-                                                        onFocus={() => setIsFocusedruc(true)}
-                                                        onBlur={() => setIsFocusedruc(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedusername ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Div'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={digitoverificador}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={digitoverificador => textodigito(digitoverificador)}
-                                                        onFocus={() => setIsFocuseddigitoverificador(true)}
-                                                        onBlur={() => setIsFocuseddigitoverificador(false)}
-                                                        underlineColorAndroid="transparent"
-                                        />
 
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedusername ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Nombre Fantasia'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={fantasia}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={fantasia => textofantasia(fantasia)}
-                                                        onFocus={() => setIsFocusedfantasia(true)}
-                                                        onBlur={() => setIsFocusedfantasia(false)}
-                                                        underlineColorAndroid="transparent"
-                                        /> */}
-
-                                <TextInput style={[styles.inputtextactivo,{color: colors.text,fontFamily: fonts.regular.fontFamily,backgroundColor:colors.backgroundInpunt, borderBottomColor: isFocusedpass ? colors.textbordercoloractive : colors.textbordercolorinactive }]}
-                                                        placeholder='Contraseña'
-                                                        placeholderTextColor='gray'
-                                                        //label='Obserbacion'
-                                                        value={pass}
-                                                        // textAlignVertical="center"
-                                                        onChangeText={pass => textopass(pass)}
-                                                        onFocus={() => setIsFocusedpass(true)}
-                                                        onBlur={() => setIsFocusedpass(false)}
-                                                        secureTextEntry={true}
-                                                        underlineColorAndroid="transparent"
-                                        />
-                            </ScrollView>
-                            <View style={{flex:1,alignContent:'center',alignItems:'center'}}>
 
                                 
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="Apellidos"
+                                        value={apellido} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setApellido}
+                                        
+                                    />
+                                </View>
+                                <View style={{ flexDirection: "row", width: "100%",justifyContent: "space-between",}}>
 
+                                    <View style={{flex: 2,}}>
+
+                                    <CustomTextInput
+                                        placeholder="Fecha Nacimiento"
+                                        value={moment(fechanac).format('DD/MM/YYYY')} // Esto se asegura de que siempre pase un valor a la prop
+                                        // onChangeText={setFechafactura}
+                                        />
+                                    </View>
+                                    <View style={{flex: 3,}}>
+
+                                    <TouchableOpacity 
+                                        style={styles.botonfecha} onPress={showDatePicker}>         
+                                        <AntDesign name="calendar" size={35} color={colors.acctionsbotoncolor} />
+                                    </TouchableOpacity>
+                                    </View>
+                                    {show && (
+                                    <DateTimePicker
+                                        value={fechanac}
+                                        mode="date" // Puede ser "date", "time" o "datetime"
+                                        display="default" // Opciones: "default", "spinner", "calendar" (varía según el SO)
+                                        onChange={onChange}
+                                    />
+                                    )}
+                                </View>
+
+                                
+                                
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="User Name"
+                                        value={username} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setUsername}
+                                        
+                                    />
+                                </View>
+                                
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="Correo Electronico"
+                                        value={correo} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setCorreo}
+                                        
+                                        
+                                    />
+                                </View>
+
+                                <View style={{ flexDirection: "row", width: "100%",justifyContent: "space-between",}}>
+
+                                    <View style={{flex: 3,marginRight:10}}>
+                                        <CustomTextInput
+                                            placeholder="Ruc o C.I."
+                                            value={ruc} // Esto se asegura de que siempre pase un valor a la prop
+                                            onChangeText={setRuc}
+                                            onBlur={textoruc}
+                                            
+                                            
+                                        />
+                                    </View>
+                                    <View style={{flex: 1,marginRight:10}}>
+                                        <CustomTextInput
+                                            placeholder="Div"
+                                            value={digitoverificador} // Esto se asegura de que siempre pase un valor a la prop
+                                            //onChangeText={setDigitoverificador}
+                                            
+                                            
+                                        />
+                                    </View>
+                                </View>
+
+                                
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="Contraseña"
+                                        value={pass} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setPass}
+                                        secureTextEntry={mostrarContrasena}
+                                        // rightIcon={<MaterialIcons name="visibility" size={24} color="black" />}
+                                        rightIcon={<MaterialIcons name={mostrarContrasena ? "visibility-off" : "visibility"} size={24} color="#000" />}
+                                        onRightIconPress={toggleMostrarContrasena} 
+                                        
+                                    />
+                                </View>
+                                <View style={{flex: 3,marginRight:10}}>
+                                    <CustomTextInput
+                                        placeholder="Repita contraseña"
+                                        value={pass2} // Esto se asegura de que siempre pase un valor a la prop
+                                        onChangeText={setPass2}
+                                        secureTextEntry={mostrarContrasena2}
+                                        // rightIcon={<MaterialIcons name="visibility" size={24} color="black" />}
+                                        rightIcon={<MaterialIcons name={mostrarContrasena2 ? "visibility-off" : "visibility"} size={24} color="#000" />}
+                                        onRightIconPress={toggleMostrarContrasena2} 
+                                        
+                                    />
+                                </View>
+                            </ScrollView>
+
+                            <View style={{flex:1,alignContent:'center',alignItems:'center'}}>
 
                                 <Button style={{marginBottom:5,width:'90%',height:50,backgroundColor:colors.acctionsbotoncolor,justifyContent:'center'}} 
                                     mode="elevated" 
@@ -456,11 +409,20 @@ const styles = StyleSheet.create({
         marginTop: 40,
       },
 
-      linkText: {
+    linkText: {
         color: 'rgba(218,165,32,0.7)',
         textDecorationLine: 'underline',
         top: 5,
       },
+    botonfecha:{
+        width: 50, 
+        height: 35, 
+  
+        marginLeft:'5%',
+        marginTop:20
+        // marginBottom:27
+      },
+  
       
 
 })

@@ -1,5 +1,5 @@
-import React, { useContext,useState } from 'react';
-import { View, Text,  StyleSheet,  Alert,Linking,TouchableOpacity ,TextInput,Image} from 'react-native';
+import React, { useEffect,useContext,useState } from 'react';
+import { View, Text,  StyleSheet,  Alert,Linking,TouchableOpacity ,TextInput,Keyboard} from 'react-native';
 import { Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
 import { useNavigation } from "@react-navigation/native";
@@ -274,7 +274,30 @@ function CargaCdc({ navigation }){
         Linking.openURL(url).catch((err) => console.error("No se pudo abrir la URL:", err));
         navigate("CargaArchivoXml", { })
       };
-        
+    
+    useEffect(() => {
+          const keyboardDidShowListener = Keyboard.addListener(
+            'keyboardDidShow',
+            () => {
+              
+              actualizarEstadocomponente('isKeyboardVisible',true)
+            }
+          );
+      
+          const keyboardDidHideListener = Keyboard.addListener(
+            'keyboardDidHide',
+            () => {
+              
+              actualizarEstadocomponente('isKeyboardVisible',false)
+            }
+          );
+      
+          // Limpiar los listeners cuando el componente se desmonte
+          return () => {
+            keyboardDidHideListener.remove();
+            keyboardDidShowListener.remove();
+          };
+        }, []);
     
     return(
       <PaperProvider >

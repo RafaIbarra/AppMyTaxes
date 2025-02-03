@@ -6,6 +6,7 @@ import { AuthContext } from '../../AuthContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 function ScreensCabecera ({ navigation,backto,title,estadosupdate,reiniciar_componentes }){
+    
     const { colors,fonts } = useTheme();
     const { navigate } = useNavigation();
     const { estadocomponente } = useContext(AuthContext);
@@ -13,8 +14,9 @@ function ScreensCabecera ({ navigation,backto,title,estadosupdate,reiniciar_comp
     const {  recargar_componentes } = useContext(AuthContext);
 
     const volver_cabecera=()=>{
-        //console.log('volver_cabecera')
-        
+        // console.log('volver_cabecera')
+        // console.time('Tiempo de renderizado de ScreensCabecera');
+        const inicio = performance.now();
         if(reiniciar_componentes){
             recargar_componentes()
         }
@@ -29,6 +31,10 @@ function ScreensCabecera ({ navigation,backto,title,estadosupdate,reiniciar_comp
             
             navigate(backto, { })
         }
+        const fin = performance.now();
+        // console.timeEnd('Tiempo de volver_cabecera')
+        // console.log('fin volver_cabecera')
+        // console.log(`Tiempo de volver_cabecera: ${fin - inicio}ms`);
     }
     
     return(

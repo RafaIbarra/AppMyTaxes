@@ -1,5 +1,5 @@
-import React, { useState, useRef,useEffect } from 'react';
-import { View, TextInput, StyleSheet, Animated, Text, Pressable } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, TextInput, StyleSheet, Animated, Pressable, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
 const CustomTextInput = ({
@@ -10,9 +10,11 @@ const CustomTextInput = ({
   style,
   editable = true,
   formato = "default",
-  keyboardType= "numeric" ,
+  keyboardType = "numeric",
   multiline = false,
   scrollEnabled = false,
+  rightIcon,
+  onRightIconPress,
   ...props
 }) => {
   const { colors } = useTheme();
@@ -33,25 +35,23 @@ const CustomTextInput = ({
     animatePlaceholder(1);
   };
 
-
   const formatValue = (inputValue) => {
     if (formato === "numerico") {
-      // Eliminar separadores existentes y aplicar formato de miles
-      const numericValue = inputValue.replace(/\./g, ""); // Remover puntos existentes
+      const numericValue = inputValue.replace(/\./g, "");
       return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     } else if (formato === "factura") {
-      // Formato 999-999-99999999999999999
       return inputValue
-      .replace(/\D/g, "") // Remover caracteres no numéricos
-      .replace(/^(\d{3})(\d{0,3})(\d{0,17})$/, (match, p1, p2, p3) => {
-        let result = p1;
-        if (p2) result += `-${p2}`;
-        if (p3) result += `-${p3}`;
-        return result;
-      });
+        .replace(/\D/g, "")
+        .replace(/^(\d{3})(\d{0,3})(\d{0,17})$/, (match, p1, p2, p3) => {
+          let result = p1;
+          if (p2) result += `-${p2}`;
+          if (p3) result += `-${p3}`;
+          return result;
+        });
     }
-    return inputValue; // Sin formato
+    return inputValue;
   };
+
   const handleChangeText = (text) => {
     if (onChangeText) {
       onChangeText(formatValue(text));
@@ -64,7 +64,7 @@ const CustomTextInput = ({
       animatePlaceholder(0);
     }
     if (onBlur) {
-      onBlur(value); // Llama a la función al salir del campo
+      onBlur(value);
     }
   };
 
@@ -76,28 +76,18 @@ const CustomTextInput = ({
 
   const placeholderTranslateY = animatedPlaceholder.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -20], // Ajustado para mejor posicionamiento vertical
+    outputRange: [0, -20],
   });
 
   const placeholderFontSize = animatedPlaceholder.interpolate({
     inputRange: [0, 1],
     outputRange: [16, 12],
   });
-  // useEffect(() => {
-    
-  //   if (value) {
-  //     animatePlaceholder(1);
-  //   } else if (!isFocused) {
-  //     animatePlaceholder(0);
-  //   }
-  // }, [value]);
 
   useEffect(() => {
-    // Formatear el valor cuando el componente se renderiza
     if (value) {
       const formattedValue = formatValue(value);
       if (formattedValue !== value) {
-        // Asegurarse de que no se repita el valor formateado
         if (onChangeText) {
           onChangeText(formattedValue);
         }
@@ -107,6 +97,7 @@ const CustomTextInput = ({
       animatePlaceholder(0);
     }
   }, [value]);
+
   return (
     <View style={[styles.container, style]}>
       <Pressable onPress={handlePlaceholderPress} style={styles.placeholderContainer}>
@@ -117,7 +108,6 @@ const CustomTextInput = ({
               color: colors.textsub,
               transform: [{ translateY: placeholderTranslateY }],
               fontSize: placeholderFontSize,
-              
             },
           ]}
         >
@@ -125,28 +115,42 @@ const CustomTextInput = ({
         </Animated.Text>
       </Pressable>
 
-      <TextInput
-        ref={inputRef}
-        value={value}
-        onChangeText={handleChangeText}
-        // keyboardType={formato === "numerico" ? "numeric" : "default"}
-        keyboardType={formato === "numerico" || formato === "numero" ? "numeric" : "default"}
-        style={[
-          styles.input,
-          {
-            borderColor:'#E0E0E0' ,
-            backgroundColor: editable ?  'transparent' : '#DEDDDC',
-            
-          },
-        ]}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        editable={editable}
-        multiline={multiline} // Nueva prop
-        scrollEnabled={scrollEnabled} // Nueva prop
-        
-        {...props}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          ref={inputRef}
+          value={value}
+          onChangeText={handleChangeText}
+          keyboardType={formato === "numerico" || formato === "numero" ? "numeric" : "default"}
+          style={[
+            styles.input,
+            {
+              borderColor: '#E0E0E0',
+              backgroundColor: editable ? 'transparent' : '#DEDDDC',
+              flex: 1,
+            },
+          ]}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          editable={editable}
+          multiline={multiline}
+          scrollEnabled={scrollEnabled}
+          {...props}
+        />
+      </View>
+
+      {rightIcon && (
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            if (onRightIconPress) {
+              onRightIconPress();
+            }
+          }}
+          style={styles.iconContainer}
+        >
+          {rightIcon}
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -156,6 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 8,
     height: 40,
+    position: 'relative',
   },
   placeholderContainer: {
     position: 'absolute',
@@ -165,7 +170,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     zIndex: 1,
-    
   },
   placeholder: {
     position: 'absolute',
@@ -173,20 +177,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingHorizontal: 2,
     fontFamily: 'SenRegular',
-    color:'red'
+    color: 'red',
   },
-  input: {
-    flex: 1,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 12,
+    borderColor: '#E0E0E0',
+    backgroundColor: 'transparent',
+    height: '100%',
+    paddingRight: 40, // Espacio para el icono
+  },
+  input: {
     fontSize: 14,
     fontFamily: 'SenRegular',
     color: '#212121',
-    
-   
+    paddingHorizontal: 12,
     height: '100%',
-    
+  },
+  iconContainer: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    zIndex: 2,
   },
 });
 
