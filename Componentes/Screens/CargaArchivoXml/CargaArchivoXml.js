@@ -55,7 +55,7 @@ const CargaArchivoXml= ({ navigation }) => {
         
           
           const files = await AndroidXmlHandler.listXmlFiles();
-          console.log(files)
+          
           // Convertir la lista de URIs a objetos con información más detallada
           const formattedFiles = files.map(fileUri => ({
             uri: fileUri,

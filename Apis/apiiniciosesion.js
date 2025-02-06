@@ -1,7 +1,7 @@
 
 import API_BASE from './ApiBase';
 
-async function Iniciarsesion(usuario,password){
+async function Iniciarsesion(usuario,password,version){
     
     let data={}
     let resp=0
@@ -15,6 +15,7 @@ async function Iniciarsesion(usuario,password){
         body: JSON.stringify({
                     username: usuario.toLowerCase(),
                     password: password,
+                    version:version
                   }),
         }
     
@@ -27,3 +28,4 @@ async function Iniciarsesion(usuario,password){
 
 } 
 export default Iniciarsesion
+

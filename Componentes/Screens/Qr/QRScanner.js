@@ -1,12 +1,14 @@
 import React, { useState, useEffect,useContext } from 'react';
 import { View,   StyleSheet, Alert,TouchableOpacity,Linking,Text   } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useCameraPermissions } from 'expo-camera';
 import { useTheme } from '@react-navigation/native';
 import { useNavigation } from "@react-navigation/native";
-import LottieView from 'lottie-react-native';
-import { AuthContext } from '../../../AuthContext';
 
+import { AuthContext } from '../../../AuthContext';
 import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
+import FolderHandler from '../../FolderHandler/FolderHandler';
+
 import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -20,6 +22,7 @@ function QRScanner({ navigation }) {
   const {  actualizarEstadocomponente } = useContext(AuthContext);
   const { estadocomponente } = useContext(AuthContext);
   const { navigate } = useNavigation();
+  const [existe,setExiste]=useState(true)
 
   const { colors,fonts } = useTheme();
   useEffect(() => {
@@ -27,6 +30,19 @@ function QRScanner({ navigation }) {
       Alert.alert("Permiso denegado", "No se concedió permiso para acceder a la cámara.");
     }
   }, [permission]);
+
+  // useEffect(() => {
+  //         const unsubscribe = navigation.addListener('focus', () => {
+          
+  //         const Comprobarexistencia = async () => {
+  //             const dato= await FolderHandler.checkIfDirectoryExists();
+              
+  //             setExiste(dato) 
+  //            };
+  //         Comprobarexistencia()
+  //     })
+  //     return unsubscribe;
+  //   })
 
  const ActivarCamara=()=>{
   // navigate("StackCamara")
@@ -77,28 +93,49 @@ function QRScanner({ navigation }) {
 
   return (
     <View style={styles.container}>
-    <ScreensCabecera title={title} backto={backto}></ScreensCabecera>
-    <View style={styles.containerobjets}>
-      <LottieView
-        source={require('../../../assets/scanqr.json')}
-        style={{ width: 300, height: 300 }}
-        autoPlay
-        loop
-      />
-      <TouchableOpacity
-        style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
-        onPress={ActivarCamara}
-      >
-        <FontAwesome name="camera-retro" size={45} color="white" />
-      </TouchableOpacity>
-      {/* Contenedor adicional para centrar el texto */}
-      <View style={styles.textContainer}>
-        <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily}}>
-          Activar Cámara
-        </Text>
+      <ScreensCabecera title={title} backto={backto}></ScreensCabecera>
+      { existe ? 
+      (
+        <View style={styles.containerobjets}>
+          <LottieView
+            source={require('../../../assets/scanqr.json')}
+            style={{ width: 300, height: 300 }}
+            autoPlay
+            loop
+          />
+          <TouchableOpacity
+            style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
+            onPress={ActivarCamara}
+          >
+            <FontAwesome name="camera-retro" size={45} color="white" />
+          </TouchableOpacity>
+          {/* Contenedor adicional para centrar el texto */}
+          <View style={styles.textContainer}>
+            <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily}}>
+              Activar Cámara
+            </Text>
+          </View>
       </View>
+      )
+      :(
+        <View style={styles.containerobjets}> 
+             <LottieView
+                source={require('../../../assets/alert.json')}
+                style={{ width: 300, height: 300 }}
+                autoPlay
+                loop
+              />
+              <View style={[styles.textContainer,{marginLeft:14}]}>
+                <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily}}>
+                Debe configurar la carpeta "MyTaxes". Vaya al apartado de configuraciones.
+                </Text>
+              </View>
+        </View>
+      )
+      }
+      
+
     </View>
-  </View>
   );
 };
 
@@ -128,6 +165,7 @@ const styles = StyleSheet.create({
     marginTop: 10, // Espacio entre el botón y el texto
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   scannedText: {
     // marginTop: 20,

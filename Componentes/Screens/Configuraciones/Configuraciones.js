@@ -1,10 +1,11 @@
 import React,{useState,useEffect,useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
-import {  View,Text,TouchableOpacity,Linking,StyleSheet,Alert } from "react-native";
+import {  View,Text,TouchableOpacity,Linking,StyleSheet,Alert,ScrollView } from "react-native";
 import { Button} from 'react-native-paper';
 import Handelstorage from "../../../Storage/handelstorage";
 import Generarpeticion from "../../../Apis/peticiones";
 import FolderHandler from "../../FolderHandler/FolderHandler";
+
 
 import { AuthContext } from "../../../AuthContext";
 import { useTheme } from '@react-navigation/native';
@@ -41,11 +42,13 @@ function Configuraciones({navigation}){
           await Linking.openURL(webPlayStoreUrl);
         }
       };
+    
     const crear_carpeta = async () => {
             const valorACopiar ='MyTaxes'
             await Clipboard.setStringAsync(valorACopiar);
             await FolderHandler.createMyTaxesFolder();
             const dato= await FolderHandler.checkIfDirectoryExists();
+            
             setExiste(dato)
           };
 
@@ -53,10 +56,10 @@ function Configuraciones({navigation}){
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
-        console.log('aca')
+        
         const Comprobarexistencia = async () => {
             const dato= await FolderHandler.checkIfDirectoryExists();
-            console.log(dato)
+            
             setExiste(dato) 
            };
         Comprobarexistencia()
@@ -65,17 +68,37 @@ function Configuraciones({navigation}){
   })
     return(
         <View style={styles.container}>
-            <View>
-                <Text>1-Debe crear la Carpeta MyTaxes </Text>
-                <Text>      *La opcion le abrira el cuadro de dialogo para la creacion </Text>
-                <Text>      *Seleccione la Carpeta Download o Descargas </Text>
-                <Text>      *Dentro de Download seleccione Crear Carpeta y pegue el nombre</Text>
-                <Text>      *El nombre requerido se copiara en forma automatica</Text>
-                <Text>      *El directorio debe ser Download/MyTaxes </Text>
-                <Text>      *Marque la opcion USAR ESTA CARPETA </Text>
+
+        <ScrollView style={{padding:10}}>
+            <View style={{borderBottomWidth:1,borderBottomColor:'gray',marginBottom:20}}>
+                <Text style={[styles.encabezado,{fontFamily: fonts.regularbold.fontFamily}]}>1- Debe crear la carpeta "MyTaxes".</Text>
+                  <View style={{marginLeft:20,marginTop:10}}>
+                    
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ La opción abrirá un cuadro de diálogo para la creación.</Text>
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ Seleccione la carpeta "Download" o "Descargas".</Text>
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ Dentro de "Download", seleccione "Crear carpeta" y pegue el nombre.</Text>
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ El nombre requerido se copiará automáticamente.</Text>
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ El directorio debe ser "Download/MyTaxes".</Text>
+                    <Text style={{fontFamily: fonts.regular.fontFamily}}>✅ Marque la opción "USAR ESTA CARPETA".</Text>
+                  </View>
+                
 
                  <TouchableOpacity
+                  style={{ 
+                    backgroundColor: existe ? 'gray'  : colors.acctionsbotoncolor, // Cambia el color si está deshabilitado
+                    marginTop: 20,
+                    marginBottom: 10,
+                    height: 40,
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    borderRadius: 20,
+                    flexDirection: 'row', // Alinea los elementos en fila
+                    paddingHorizontal: 10, // Espaciado interno
+                    opacity: !existe ? 1 : 0.5, // Reduce opacidad si está deshabilitado
+                  }} 
+                  
                  onPress={existe === false ? crear_carpeta : null}
+                 disabled={existe} 
                   >
                     <Text style={{fontSize: 16,color: 'black',fontFamily: fonts.regularbold.fontFamily, marginRight: 8,}}>
                         Ir a Crear Carpeta
@@ -83,12 +106,27 @@ function Configuraciones({navigation}){
                  </TouchableOpacity>
             </View>
 
-            <View>
-                <Text>2-Debe tener instalado el navegador Opera </Text>
-                <Text>      *Dentro del navegador configure la carpeta de descargas </Text>
-                <Text>      *Selecione la carpeta MyTaxes </Text>
+            <View style={{borderBottomWidth:1,borderBottomColor:'gray',marginBottom:20}}>
+                <Text style={[styles.encabezado,{fontFamily: fonts.regularbold.fontFamily}]}>2- Debe tener instalado el navegador Opera.</Text>
+                <View style={{marginLeft:20,marginTop:10}}>
+
+                    <Text style={[styles.contenido,{fontFamily: fonts.regular.fontFamily}]}>✅ Dentro del navegador, configure la carpeta de descargas.</Text>
+                    <Text style={{fontFamily: fonts.regular.fontFamily}}>✅ Seleccione la carpeta "MyTaxes".</Text>
+                </View>
 
                 <TouchableOpacity 
+                style={{ 
+                  backgroundColor:  colors.acctionsbotoncolor, // Cambia el color si está deshabilitado
+                  marginTop: 20,
+                  marginBottom: 10,
+                  height: 40,
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  borderRadius: 20,
+                  flexDirection: 'row', // Alinea los elementos en fila
+                  paddingHorizontal: 10, // Espaciado interno
+                  opacity:  1, // Reduce opacidad si está deshabilitado
+                }} 
                  onPress={openOperaInPlayStore}>
                     <Text style={{fontSize: 16,color: 'black',fontFamily: fonts.regularbold.fontFamily, marginRight: 8,}}>
                         Descarga navegador
@@ -96,6 +134,9 @@ function Configuraciones({navigation}){
                  </TouchableOpacity>
 
             </View>
+        </ScrollView>
+
+
         </View>
     )
 
@@ -104,7 +145,14 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       
-      
+    },
+    encabezado:{
+      fontSize: 16,
+      color: 'black',
+      marginBottom:5
+    },
+    contenido:{
+      marginBottom:10
     }
   });
 export default Configuraciones

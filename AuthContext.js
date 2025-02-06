@@ -4,7 +4,7 @@ import React, { createContext, useState, useContext } from 'react';
 export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [activarsesion, setActivarsesion] = useState(false);
-    const [versionsys,setVersionsys]=useState('Version 1.9')
+    const [versionsys,setVersionsys]=useState('1.3')
     const [sesiondata, setSesiondata] = useState();
     const [periodo, setPeriodo] = useState(false);
     

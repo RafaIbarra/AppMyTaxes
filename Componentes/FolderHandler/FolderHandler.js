@@ -47,7 +47,7 @@ class FolderHandler {
 
   async createMyTaxesFolder () {
     try {
-        console.log(DOWNLOADS_FOLDER)
+        
       // Primero solicitamos permiso para acceder a Downloads
       const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
         // En Android 11+, necesitas usar el URI de Downloads
@@ -59,10 +59,19 @@ class FolderHandler {
         
         const newFolderUri = await FileSystem.StorageAccessFramework.createFileAsync(
             permission.directoryUri,
-          '.MyTaxes', // Usando un archivo oculto como marcador de carpeta
+          //'.MyTaxes', // Usando un archivo oculto como marcador de carpeta
           'application/octet-stream'
         );
-        
+        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      
+        if (!permissions.granted) {
+          throw new Error('Permiso denegado para acceder al directorio');
+        }
+
+        // Guardar el URI del directorio
+        const directoryUri = permissions.newFolderUri;
+        this.selectedDirectory = { uri: directoryUri };
+        await AsyncStorage.setItem(DIRECTORY_URI_KEY, directoryUri);
         Alert.alert('Carpeta creada exitosamente');
         return true;
       } else {
@@ -90,7 +99,7 @@ class FolderHandler {
       // Intentar acceder al directorio y comprobar si está disponible
       //const directoryUri = DOWNLOADS_FOLDER
       const directoryUri = 'content://com.android.externalstorage.documents/tree/primary%3ADownload%2FMyTaxes/document/primary%3ADownload%2FMyTaxes%'
-      console.log(directoryUri)
+      
       
       
       // Intentar leer el directorio, si ocurre un error puede significar que el directorio ya no es accesible
@@ -98,10 +107,10 @@ class FolderHandler {
       
       // Verificar si se pudieron leer los archivos
       if (files && files.length > 0) {
-        console.log('El directorio "MyTaxes" existe y contiene archivos.');
+        //Alert.alert('El directorio "MyTaxes" existe y contiene archivos.');
         return true;
       } else {
-        console.log('El directorio "MyTaxes" está vacío.');
+        Alert.alert('El directorio "MyTaxes" está vacío.');
         return true;
       }
     } catch (error) {

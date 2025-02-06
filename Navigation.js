@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { View,Text,TouchableOpacity } from "react-native";
 import { useTheme } from '@react-navigation/native';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation  } from "@react-navigation/native";
 
 import { AuthContext } from "./AuthContext";
 
@@ -112,10 +112,14 @@ function DrawerInicio({navigation}){
       headerRight:({})=>(
         <View style={{marginRight:20}}>
 
-          <TouchableOpacity onPress={() => navigate('StackPeriodo')} >
-                    <AntDesign name="setting" size={27} color={colors.iconcolor} />
+          <TouchableOpacity 
+              //  onPress={() => navigate('StackPeriodo')} 
+              onPress={() => navigate("InicioHome", { screen: 'StackPeriodo'})} 
+               
+              >
+              <AntDesign name="calendar" size={27} color={colors.iconcolor} />
                     
-                </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       ),
       headerTitleAlign:'center',
@@ -197,7 +201,7 @@ function DrawerInicio({navigation}){
           return(<Text style={{color:colortext,fontSize:sizefont,fontFamily:familyname}}>Configuraciones</Text>)
         },
         
-        drawerIcon: ({size, color})=>(<MaterialCommunityIcons name="archive-clock-outline" size={sizeicon} color={colors.iconcolor}  />),
+        drawerIcon: ({size, color})=>(<AntDesign name="setting" size={sizeicon} color={colors.iconcolor}  />),
         drawerItemStyle:{borderBottomWidth:1,borderBottomColor:'white',marginBottom:5,marginTop:20}
         
         }}

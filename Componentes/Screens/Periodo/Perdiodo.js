@@ -35,14 +35,7 @@ function Periodo({navigation}){
     const [listannos,setListaanos]=useState([])
     const [expandedAno,setExpandedAno]=useState(false)
 
-    const checkDirectoryAccess = async () => {
-            await FolderHandler.checkIfDirectoryExists();
-            
-          };
-    const crear = async () => {
-        await FolderHandler.createMyTaxesFolder();
-        
-      };
+  
     const seleccionarmes =(item)=>{
         setNumeromesactual(item.id)
         setMesactual(item.nombre_mes)
@@ -260,7 +253,7 @@ function Periodo({navigation}){
                             // }}
                             mode="elevated" 
                             textColor="white"
-                            onPress={crear}>
+                            onPress={procesar}>
                             Seleccionar Periodo 
                         </Button>
                 </View>

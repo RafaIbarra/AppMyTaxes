@@ -148,7 +148,7 @@ function DrawerContentInicio(props){
                         onPress={cerrar}>
                             CERRAR SESION 
                 </Button>
-                <Text style={{color: colors.text,fontSize:10,marginTop:5}}> {versionsys} </Text>
+                <Text style={{color: colors.text,fontSize:10,marginTop:5}}> Versión {versionsys} </Text>
             </View>
 
         </View>

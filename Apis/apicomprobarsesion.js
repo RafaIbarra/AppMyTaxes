@@ -47,18 +47,28 @@ async function Comprobarsesion(endpoint,metodo,bodyoptions){
     
     try {
         const response = await fetchWithTimeout(`${API_BASE}/${endpoint}`, requestOptions); 
-        
-        if (!response.ok) {
-          
-          data = [];
-          resp = response.status; // Usar el status real del error
-          datos = { data, resp };
-        } else {
-          data = await response.json();
-          resp = response.status;
-          
-          datos = { data, resp };
+        result_data = await response.json();
+        resp = response.status;
+        if(resp===200){
+          data=result_data['datauser']
+        }else{
+
+          data=result_data['data']
         }
+        datos = { data, resp }
+         
+        
+        // if (!response.ok) {
+        //   console.log(response)
+        //   data = [];
+        //   resp = response.status; // Usar el status real del error
+        //   datos = { data, resp };
+        // } else {
+        //   data = await response.json();
+        //   resp = response.status;
+          
+        //   datos = { data, resp };
+        // }
       } catch (err) {
         
         data = [];

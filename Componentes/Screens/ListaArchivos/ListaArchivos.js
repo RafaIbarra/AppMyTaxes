@@ -58,17 +58,13 @@ const ListaArchivos= ({ navigation }) => {
           break;
     
         default:
-          // Manejar cualquier otro caso (opcional)
-          console.log('Opción no válida');
+          // A cualquier otro caso (opcional)
+          Alert.alert('Opción no válida');
           break;
       }
     };
 
-    const volver=()=>{
-      
-      actualizarEstadocomponente('qrdetected',false)
-      navigate("MainTabs2", { })
-  }
+
     const seleccionar_archivo=(detaraeg)=>{
       
       if(detaraeg.procesado==='NO'){
@@ -84,69 +80,12 @@ const ListaArchivos= ({ navigation }) => {
       }else{
         
         
-        // console.log(detaraeg.data_factura[0]['DetalleFactura'])
-        // detaraeg.data_factura[0]['DetalleFactura'].forEach((detalle, index) => {
-        //   // Generar un nombre de ítem dinámico: Item_1, Item_2, ...
-        //   let itemKey = `Item_${index + 1}`;
-      
-        //   console.log(detalle.concepto)
-        // });
+        
+        
         const datafac=detaraeg.data_factura[0]
-        //console.log(datafac)
-        let estructura = {
-          Conceptos: {},
-          DataEmpresa: {
-            "Empresa": datafac.NombreEmpresa,
-            "NroRuc": datafac.RucEmpresa
-          },
-          DataFactura:{
-            "FechaOperacion":datafac.fecha_factura,
-            "NroFactura":datafac.numero_factura,
-            "cdc":datafac.cdc
-          },
-          DataMontos:{
-            "total_operacion":datafac.total_factura,
-            "liq_iva10":datafac.iva10,
-            "liq_iva5":datafac.iva5,
-            "total_iva":detaraeg.liquidacion_iva
-          },
-          Datosregistro:{
-            "Fecharegistro":datafac.fecha_registro,
-            "IdOperacion":datafac.id.toString(),
-            "FormaRegistro":datafac.tipo_registro
-          }
-  
-        };
-  
-        datafac.DetalleFactura.forEach((detalle, index) => {
-          // Generar un nombre de ítem dinámico: Item_1, Item_2, ...
-          let itemKey = `Item_${index + 1}`;
-      
-          // Asignar los valores correspondientes
-          estructura.Conceptos[itemKey] = {
-            "dAntGloPreUniIt": "",
-            "dAntPreUniIt": "",
-            "dBasExe": "",
-            "dBasGravIVA": "",
-            "dCantProSer": detalle.cantidad,
-            "dCodInt": "",
-            "dDesAfecIVA": "",
-            "dDesProSer": detalle.concepto,
-            "dDesUniMed": "",
-            "dDescGloItem": "",
-            "dDescItem": "",
-            "dLiqIVAItem": "",
-            "dPUniProSer": "",
-            "dPorcDesIt": "",
-            "dPropIVA": "",
-            "dTasaIVA": "",
-            "dTotBruOpeItem": "",
-            "dTotOpeItem": detalle.total,
-            "iAfecIVA": ""
-          };
-        });
-        // console.log(estructura)
-        actualizarEstadocomponente('datafactura',estructura)
+
+    
+        actualizarEstadocomponente('datafactura',datafac)
         actualizarEstadocomponente('factura_editar',datafac.id)
         navigation.navigate('InicioHome', {
           screen: 'DetalleFactura', // Nombre exacto de la pantalla en el Tab
@@ -154,6 +93,7 @@ const ListaArchivos= ({ navigation }) => {
 
       }
     }
+    
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             actualizarEstadocomponente('tituloloading','BUSCANDO ARCHIVOS XML..')
@@ -266,12 +206,35 @@ const ListaArchivos= ({ navigation }) => {
             const archivosProcesados = registros.filter(archivo => archivo.procesado === "SI");
             setDataarchivosprocesados(archivosProcesados)
 
-            setDataarchivos(registros)
+            
             setDataarchivoscompletos(registros)
+            
             
             setCant_no(archivosPendientes.length)
             setCant_si(archivosProcesados.length)
             setCantarchivos(registros.length)
+
+            switch (selectedButton) {
+              case 'TODOS':
+                // Lógica para mostrar todos los archivos
+                setDataarchivos(registros)
+                break;
+          
+              case 'PENDIENTES':
+                // Lógica para mostrar solo los archivos pendientes
+                setDataarchivos(archivosPendientes)
+                break;
+          
+              case 'PROCESADOS':
+                // Lógica para mostrar solo los archivos procesados
+                setDataarchivos(archivosProcesados)
+                break;
+          
+              default:
+                // Manejar cualquier otro caso (opcional)
+                setDataarchivos(registros)
+                break;
+            }
 
           }else if(respuesta === 403 || respuesta === 401){
                       
@@ -315,6 +278,8 @@ const ListaArchivos= ({ navigation }) => {
       const handleUploadXml = async (fileUri) => {
         // setIsProcessing(true);
         // setStatus('Subiendo archivo...');
+        actualizarEstadocomponente('datafactura',[])
+        
         actualizarEstadocomponente('tituloloading','SUBIENDO ARCHIVO...')
         actualizarEstadocomponente('loading',true)
         try {
@@ -322,12 +287,16 @@ const ListaArchivos= ({ navigation }) => {
             fileUri);
           
           actualizarEstadocomponente('factura_editar',0)
-          setStatus('Archivo subido correctamente');
           actualizarEstadocomponente('datafactura',data)
-        //   navigate("DetalleFactura")
-        navigation.navigate('InicioHome', {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          setStatus('Archivo subido correctamente');
+          
+          //navigate("DetalleFactura")
+          navigate('InicioHome', {
             screen: 'DetalleFactura', // Nombre exacto de la pantalla en el Tab
-          });
+          })
+
+
         } catch (error) {
           setStatus(`Error: ${error.message}`);
         } finally {

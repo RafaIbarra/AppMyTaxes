@@ -273,13 +273,13 @@ function CargaManual({ navigation }){
         setCodigofacturaoperacion(estadocomponente.factura_editar)
         const valores_factura=estadocomponente.datafactura
         setDatafacturaedit(valores_factura)
-        console.log(valores_factura.DetalleFactura)
+        
 
         const totOpeItem10 = Object.values(valores_factura.DetalleFactura).find(
           (item) => item.concepto === "Articulos al 10%"
         )?.total || 0;
         const ent_item10=parseInt(totOpeItem10, 10)
-        console.log(ent_item10)
+        
         setArticulos10(ent_item10 === 0 ? '' : ent_item10.toString());
 
 

@@ -66,11 +66,11 @@ function DetalleFactura({ navigation }){
 
     const volver=()=>{
       
-      // navigation.navigate('MainTabs2', {
-      //   screen: 'ListadoFacturas', // Nombre exacto de la pantalla en el Tab
-      // });
+      navigation.navigate('MainTabs2', {
+        screen: 'ListadoFacturas', // Nombre exacto de la pantalla en el Tab
+      });
       
-      navigation.goBack();
+      //navigation.goBack();
       
     }
     const editar_registro =()=>{
@@ -219,8 +219,9 @@ function DetalleFactura({ navigation }){
       const to = 10;
       const tamañoletratabla=10
       const tamañoletraheadertabla=12
+      
     useEffect(() => {
-        
+      const unsubscribe = navigation.addListener('focus', () => {
         
         
         if(estadocomponente.factura_editar >0){
@@ -267,8 +268,12 @@ function DetalleFactura({ navigation }){
           setConceptos(conceptosConKey)
         }
         
-        
-      }, [detallefactura,estadocomponente.factura_editar,modoedicion]);
+      })
+      return unsubscribe; 
+      }, 
+      // [navigation,detallefactura,estadocomponente.factura_editar,modoedicion]
+      [navigation,estadocomponente.datafactura]      
+      );
 
 
 

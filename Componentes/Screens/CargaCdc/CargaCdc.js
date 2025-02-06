@@ -5,7 +5,7 @@ import { useTheme } from '@react-navigation/native';
 import { useNavigation } from "@react-navigation/native";
 
 import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
-import CustomTextInput from '../../CustomTextInput/CustomTextInput';
+import FolderHandler from '../../FolderHandler/FolderHandler';
 import { AuthContext } from '../../../AuthContext';
 import Generarpeticion from '../../../Apis/peticiones';
 
@@ -30,7 +30,8 @@ function CargaCdc({ navigation }){
     const[backto,setBackto]=useState('MainTabs2')
     const { navigate } = useNavigation();
     const { colors,fonts } = useTheme();
-    
+     const [existe,setExiste]=useState(true)
+     
     const { estadocomponente } = useContext(AuthContext);
     const {  actualizarEstadocomponente } = useContext(AuthContext);
     const [hasPermission, setHasPermission] = useState(false);
@@ -298,168 +299,179 @@ function CargaCdc({ navigation }){
             keyboardDidShowListener.remove();
           };
         }, []);
-    
-    return(
-      <PaperProvider >
 
-          <View style={styles.container}>
-              <ScreensCabecera title={title} backto={backto}></ScreensCabecera>
-
-              <Portal>            
-                <Dialog visible={visibledialogo} onDismiss={hideDialog}>
-                    <Dialog.Icon icon="alert-circle" size={50} color="red"/>
-                    <Dialog.Title>ERROR</Dialog.Title>
-                    <Dialog.Content>
-                        <Text variant="bodyMedium">{mensajeerror}</Text>
-                        
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={hideDialog}>OK</Button>
-                        
-                    </Dialog.Actions>
-                </Dialog>
-              </Portal>
-                    
-
-              { !recording && !audioUri && !modo &&(
-                    <View style={styles.containercentral}> 
-
-                        <View style={styles.botoneragrabacion}> 
-
-                          <View style={styles.botonContainer}> 
-                            <TouchableOpacity 
-                              style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} onPress={cargamanual}>
-                              <Entypo name="pencil" size={50} color="white" />
-                            </TouchableOpacity>
-                            <Text style={[styles.textoboton,{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>Cargar Cdc</Text>
-                          </View>
-
-                          <View style={styles.botonContainer}> 
-
-                            <TouchableOpacity 
-                              style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} onPress={startRecording}>
-                              <Feather name="mic" size={50} color="white" />            
-                            </TouchableOpacity>
-                            <Text style={[styles.textoboton,{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>Grabar Audio</Text>
-                          </View>
-
-                          
-                        </View>
-
-                    </View>
-                )
-              }
-
-              {(audioUri ||  modo)&&(
-                <View style={styles.viewmic}> 
-
-                <TouchableOpacity 
-                  style={[styles.botoncamara,{ backgroundColor:'red'}]} onPress={cancelaroperacion}>
-                  <MaterialIcons name="cancel" size={60} color="white" />         
-                </TouchableOpacity>
-                </View>
-              )
-
-              }
-              { recording && (
-                <View style={styles.containercentral}> 
-
-                    {/* <Video
-                            source={require('../../../assets/rec4.mp4')}
-                            style={{ width: 200, height: 200 }}
-                            shouldPlay
-                            isLooping
-                            resizeMode="contain"
-                    /> */}
-                    <LottieView
-                      source={require('../../../assets/sound2.json')} // Reemplaza con tu archivo de animación Lottie en formato JSON
-                      autoPlay
-                      loop
-                      style={{ width: 200, height: 200}}
-                    />
-                    <TouchableOpacity 
-                        style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} onPress={stopRecording}>
-                        <FontAwesome5 name="stop-circle" size={24} color="white" />          
-                      </TouchableOpacity>
-
-                    
-                
-
-                </View>
-              )
-
-              }
-              {audioUri && (
-              <>
+    // useEffect(() => {
+    //           const unsubscribe = navigation.addListener('focus', () => {
               
-                <View style={styles.containercentral}> 
-                    <Text style={{ fontFamily: fonts.regularbold.fontFamily,fontSize:30}} >Grabación lista</Text>
-
-                    <View style={styles.botoneragrabacion}>
-                        <View style={styles.botonContainer}> 
-
-                          <TouchableOpacity style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} 
-                          onPress={isPlaying ? stopAudio : playAudio}
-                          >
-                            <Feather 
-                            name={isPlaying ? 'pause' : 'play'} 
-                            size={30} 
-                            color={ 'white'} 
-                          />
-                          </TouchableOpacity>
-                          <Text style={[styles.textoboton,{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>{isPlaying ? 'Parar' : 'Reproducir'}</Text>
-                        </View>
-
-                        <View  style={styles.botonContainer}>
-                          <TouchableOpacity style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} onPress={uploadAudio}>
-                                <AntDesign name="upload" size={24} color="white" />
-                          </TouchableOpacity>
-                          <Text style={[styles.textoboton,{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>Transcribir</Text>
-                        </View>
-                    </View>
+    //           const Comprobarexistencia = async () => {
+    //               const dato= await FolderHandler.checkIfDirectoryExists();
+                  
+    //               setExiste(dato) 
+    //              };
+    //           Comprobarexistencia()
+    //       })
+    //       return unsubscribe;
+    //     })
+    
+  return (
+    <PaperProvider>
+      <View style={styles.container}>
+        <ScreensCabecera title={title} backto={backto} />
+  
+        <Portal>
+          <Dialog visible={visibledialogo} onDismiss={hideDialog}>
+            <Dialog.Icon icon="alert-circle" size={50} color="red" />
+            <Dialog.Title>ERROR</Dialog.Title>
+            <Dialog.Content>
+              <Text variant="bodyMedium">{mensajeerror}</Text>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={hideDialog}>OK</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+  
+        {existe ? (
+          <>
+            {/* Lógica principal cuando `existe` es true */}
+            {!recording && !audioUri && !modo && (
+              <View style={styles.containercentral}>
+                <View style={styles.botoneragrabacion}>
+                  <View style={styles.botonContainer}>
+                    <TouchableOpacity
+                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                      onPress={cargamanual}
+                    >
+                      <Entypo name="pencil" size={50} color="white" />
+                    </TouchableOpacity>
+                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                      Cargar Cdc
+                    </Text>
+                  </View>
+  
+                  <View style={styles.botonContainer}>
+                    <TouchableOpacity
+                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                      onPress={startRecording}
+                    >
+                      <Feather name="mic" size={50} color="white" />
+                    </TouchableOpacity>
+                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                      Grabar Audio
+                    </Text>
+                  </View>
                 </View>
-              </>
-              )}
-
-            
-
-              {((modo === 'CDC') || (modo === 'AUDIO' && transcripcion))&& (
-                    <>
-                    
-                      <View style={styles.containercentral}>
-                      <Text style={{ fontFamily: fonts.regularbold.fontFamily,fontSize:30}} >{cabeceracdc}</Text>
-                        <View style={[styles.contenedorcdc,{marginTop:20}]}>
-                            <Text style={[styles.labelcdc,{ fontFamily: fonts.regular.fontFamily }]}>CDC:</Text>
-                              <TextInput
-                                style={[styles.inputcdc,{color: colors.text,backgroundColor: colors.backgroundInpunt,fontFamily: fonts.regular.fontFamily,}]}
-                                value={transcripcion}
-                                onChangeText={transcripcion => textocdc(transcripcion)}
-                                underlineColorAndroid="transparent"
-                                multiline={true} // Permite desplazamiento horizontal si es necesario
-                                scrollEnabled={true} // Habilita el desplazamiento horizontal
-                                keyboardType={"numeric"}
-                              />
-                              
-                        </View>
-                        <Text style={{ fontFamily: fonts.regular.fontFamily,color:'red' }}>{String(transcripcion || '').replace(/(\d{4})/g, '$1 ')}</Text>
-                        <View style={styles.botonContainer}> 
-
-                          <TouchableOpacity style={[styles.botoncamara,{ backgroundColor:'#57DCA3'}]} onPress={copiarAlPortapapeles}>
-                            <FontAwesome name="opera" size={50} color="white" />
-                          </TouchableOpacity>
-                          <Text style={[styles.textoboton,{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>Consulta Cdc</Text>
-                        </View>
-                      </View>
-                      
-                    </>
-              )}
-          
+              </View>
+            )}
+  
+            {(audioUri || modo) && (
+              <View style={styles.viewmic}>
+                <TouchableOpacity
+                  style={[styles.botoncamara, { backgroundColor: "red" }]}
+                  onPress={cancelaroperacion}
+                >
+                  <MaterialIcons name="cancel" size={60} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
+  
+            {recording && (
+              <View style={styles.containercentral}>
+                <LottieView source={require("../../../assets/sound2.json")} autoPlay loop style={{ width: 200, height: 200 }} />
+                <TouchableOpacity style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]} onPress={stopRecording}>
+                  <FontAwesome5 name="stop-circle" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
+  
+            {audioUri && (
+              <View style={styles.containercentral}>
+                <Text style={{ fontFamily: fonts.regularbold.fontFamily, fontSize: 30 }}>Grabación lista</Text>
+                <View style={styles.botoneragrabacion}>
+                  <View style={styles.botonContainer}>
+                    <TouchableOpacity
+                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                      onPress={isPlaying ? stopAudio : playAudio}
+                    >
+                      <Feather name={isPlaying ? "pause" : "play"} size={30} color="white" />
+                    </TouchableOpacity>
+                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                      {isPlaying ? "Parar" : "Reproducir"}
+                    </Text>
+                  </View>
+  
+                  <View style={styles.botonContainer}>
+                    <TouchableOpacity
+                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                      onPress={uploadAudio}
+                    >
+                      <AntDesign name="upload" size={24} color="white" />
+                    </TouchableOpacity>
+                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                      Transcribir
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+  
+            {(modo === "CDC" || (modo === "AUDIO" && transcripcion)) && (
+              <View style={styles.containercentral}>
+                <Text style={{ fontFamily: fonts.regularbold.fontFamily, fontSize: 30 }}>{cabeceracdc}</Text>
+                <View style={[styles.contenedorcdc, { marginTop: 20 }]}>
+                  <Text style={[styles.labelcdc, { fontFamily: fonts.regular.fontFamily }]}>CDC:</Text>
+                  <TextInput
+                    style={[
+                      styles.inputcdc,
+                      {
+                        color: colors.text,
+                        backgroundColor: colors.backgroundInpunt,
+                        fontFamily: fonts.regular.fontFamily,
+                      },
+                    ]}
+                    value={transcripcion}
+                    onChangeText={textocdc}
+                    underlineColorAndroid="transparent"
+                    multiline={true}
+                    scrollEnabled={true}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <Text style={{ fontFamily: fonts.regular.fontFamily, color: "red" }}>
+                  {String(transcripcion || "").replace(/(\d{4})/g, "$1 ")}
+                </Text>
+                <View style={styles.botonContainer}>
+                  <TouchableOpacity
+                    style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                    onPress={copiarAlPortapapeles}
+                  >
+                    <FontAwesome name="opera" size={50} color="white" />
+                  </TouchableOpacity>
+                  <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                    Consulta Cdc
+                  </Text>
+                </View>
+              </View>
+            )}
+          </>
+        ) 
+        : 
+        (
+          // Si `existe` es false, mostrar la alerta con animación
+          <View style={styles.containercentral}>
+            <LottieView source={require("../../../assets/alert.json")} style={{ width: 300, height: 300 }} autoPlay loop />
+            <View style={[styles.labelcdc, { marginLeft: 14 }]}>
+              <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }}>
+                Debe configurar la carpeta "MyTaxes". Vaya al apartado de configuraciones.
+              </Text>
+            </View>
           </View>
-      </PaperProvider>
-
-
-   
-    )
+        )
+        }
+      </View>
+    </PaperProvider>
+  );
+        
 }
 
 const styles = StyleSheet.create({

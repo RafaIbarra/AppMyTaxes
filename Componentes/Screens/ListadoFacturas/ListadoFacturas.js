@@ -347,16 +347,17 @@ function ListadoFacturas({ navigation }){
 
                 <View style={[styles.cabeceracontainer,{backgroundColor:colors.card}]}>
 
-                  {!busqueda &&( 
+                  {/* {!busqueda &&( 
                           <TouchableOpacity onPress={openbusqueda}>
                               
                               <FontAwesome name="search" size={24} color={colors.iconcolor}/>
                               
                           </TouchableOpacity>
-                  )}
+                  )} */}
 
                   {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Facturas Registradas</Text>)}
-                  {busqueda &&(
+                  
+                  {/* {busqueda &&(
 
                   <Animated.View style={{ borderWidth:1,backgroundColor:'rgba(28,44,52,0.1)',borderRadius:10,borderColor:'white',flexDirection: 'row',alignItems: 'center',width:'80%',opacity: fadeAnim}}>
                     <TextInput 
@@ -374,7 +375,7 @@ function ListadoFacturas({ navigation }){
                     </TouchableOpacity>
                   </Animated.View>
                   )
-                  }
+                  } */}
                     
       
                 </View>
