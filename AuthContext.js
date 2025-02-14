@@ -30,7 +30,9 @@ export const AuthProvider = ({ children }) => {
         datalistadofactura:[],
         
         factura_editar:0,
-        isKeyboardVisible : false
+        isKeyboardVisible : false,
+        TipoCambiopass:0,
+        camaracdc :false
     
       })
 

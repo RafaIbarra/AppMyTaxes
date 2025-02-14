@@ -22,7 +22,7 @@ function QRScanner({ navigation }) {
   const {  actualizarEstadocomponente } = useContext(AuthContext);
   const { estadocomponente } = useContext(AuthContext);
   const { navigate } = useNavigation();
-  const [existe,setExiste]=useState(true)
+  const [existe,setExiste]=useState(false)
 
   const { colors,fonts } = useTheme();
   useEffect(() => {
@@ -31,18 +31,18 @@ function QRScanner({ navigation }) {
     }
   }, [permission]);
 
-  // useEffect(() => {
-  //         const unsubscribe = navigation.addListener('focus', () => {
+  useEffect(() => {
+          const unsubscribe = navigation.addListener('focus', () => {
           
-  //         const Comprobarexistencia = async () => {
-  //             const dato= await FolderHandler.checkIfDirectoryExists();
+          const Comprobarexistencia = async () => {
+              const dato= await FolderHandler.checkIfDirectoryExists();
               
-  //             setExiste(dato) 
-  //            };
-  //         Comprobarexistencia()
-  //     })
-  //     return unsubscribe;
-  //   })
+              setExiste(dato) 
+             };
+          Comprobarexistencia()
+      })
+      return unsubscribe;
+    })
 
  const ActivarCamara=()=>{
   // navigate("StackCamara")

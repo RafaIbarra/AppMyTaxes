@@ -30,7 +30,7 @@ function CargaCdc({ navigation }){
     const[backto,setBackto]=useState('MainTabs2')
     const { navigate } = useNavigation();
     const { colors,fonts } = useTheme();
-     const [existe,setExiste]=useState(true)
+     const [existe,setExiste]=useState(false)
      
     const { estadocomponente } = useContext(AuthContext);
     const {  actualizarEstadocomponente } = useContext(AuthContext);
@@ -300,18 +300,18 @@ function CargaCdc({ navigation }){
           };
         }, []);
 
-    // useEffect(() => {
-    //           const unsubscribe = navigation.addListener('focus', () => {
+    useEffect(() => {
+              const unsubscribe = navigation.addListener('focus', () => {
               
-    //           const Comprobarexistencia = async () => {
-    //               const dato= await FolderHandler.checkIfDirectoryExists();
+              const Comprobarexistencia = async () => {
+                  const dato= await FolderHandler.checkIfDirectoryExists();
                   
-    //               setExiste(dato) 
-    //              };
-    //           Comprobarexistencia()
-    //       })
-    //       return unsubscribe;
-    //     })
+                  setExiste(dato) 
+                 };
+              Comprobarexistencia()
+          })
+          return unsubscribe;
+        })
     
   return (
     <PaperProvider>

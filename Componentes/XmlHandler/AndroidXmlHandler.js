@@ -12,6 +12,7 @@ class AndroidXmlHandler {
   async initializeFromStorage() {
     try {
       const savedUri = await AsyncStorage.getItem(DIRECTORY_URI_KEY);
+      
       if (savedUri) {
         this.selectedDirectory = { uri: savedUri };
       }
@@ -30,6 +31,7 @@ class AndroidXmlHandler {
       }
 
       // Guardar el URI del directorio
+      
       const directoryUri = permissions.directoryUri;
       this.selectedDirectory = { uri: directoryUri };
       await AsyncStorage.setItem(DIRECTORY_URI_KEY, directoryUri);

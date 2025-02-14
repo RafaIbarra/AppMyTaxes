@@ -58,17 +58,7 @@ async function Comprobarsesion(endpoint,metodo,bodyoptions){
         datos = { data, resp }
          
         
-        // if (!response.ok) {
-        //   console.log(response)
-        //   data = [];
-        //   resp = response.status; // Usar el status real del error
-        //   datos = { data, resp };
-        // } else {
-        //   data = await response.json();
-        //   resp = response.status;
-          
-        //   datos = { data, resp };
-        // }
+  
       } catch (err) {
         
         data = [];

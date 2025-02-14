@@ -1,5 +1,5 @@
 import React,{useContext} from "react";
-import { NavigationContainer,DefaultTheme,DarkTheme as NavigationDarkTheme } from "@react-navigation/native";
+import { NavigationContainer,DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from "@react-navigation/drawer";
@@ -9,6 +9,10 @@ import { useNavigation  } from "@react-navigation/native";
 
 import { AuthContext } from "./AuthContext";
 
+
+import Loginv3 from "./Componentes/Screens/Login/Loginv3";
+import RegistroUsuario from "./Componentes/Screens/RegistroUsuario/RegistroUsuario";
+import RecuperacionConraseña from "./Componentes/Screens/RecuperacionConraseña/RecuperacionConraseña";
 
 import DrawerContentInicio from "./Componentes/DrawerContentInicio/DrawerContentInicio";
 import QRScanner from "./Componentes/Screens/Qr/QRScanner";
@@ -22,10 +26,9 @@ import GeneracionArchivo from "./Componentes/Screens/GeneracionArchivo/Generacio
 
 import DetalleFactura from "./Componentes/Screens/DetalleFactura/DetalleFactura";
 import Camara from "./Componentes/Screens/Camara/Camara";
+import CamraCdc from "./Componentes/Screens/CamraCdc/CamraCdc";
 import CargaArchivoXml from "./Componentes/Screens/CargaArchivoXml/CargaArchivoXml";
-import Loginv3 from "./Componentes/Screens/Login/Loginv3";
 import Cargando from "./Componentes/Procesando/Cargando";
-import RegistroUsuario from "./Componentes/Screens/RegistroUsuario/RegistroUsuario";
 import ListaArchivos from "./Componentes/Screens/ListaArchivos/ListaArchivos";
 import Configuraciones from "./Componentes/Screens/Configuraciones/Configuraciones";
 
@@ -38,7 +41,7 @@ import Fontisto from '@expo/vector-icons/Fontisto';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import { Card } from "react-native-paper";
+
 
 
 const MyTheme = {
@@ -97,12 +100,13 @@ function DrawerInicio({navigation}){
   const {periodo, setPeriodo} = useContext(AuthContext);
   const { navigate } = useNavigation();
   
-  
+  const { estadocomponente } = useContext(AuthContext);
 
   return(
 
   <Drawer.Navigator
     screenOptions={{
+      headerShown: !estadocomponente.camaracdc, 
       headerTitle: ({}) => (
         <View >
           <Text style={{ color: colors.textcard,fontSize:20,fontFamily: fonts.regularbold.fontFamily}}>{periodo}</Text>
@@ -127,10 +131,7 @@ function DrawerInicio({navigation}){
       headerTintColor: colors.textcard,
       drawerLabelStyle: {marginLeft: 0,fontFamily: fonts.regularbold.fontFamily},
       tabBarLabelStyle:{borderWidth:1,bordercolor:'red'},
-      
-      
-      
-      
+    
     }}
     drawerContent={DrawerContentInicio}
   >
@@ -180,7 +181,7 @@ function DrawerInicio({navigation}){
           let familyname
           familyname= focused ? fonts.regularbold.fontFamily : fonts.regular.fontFamily;
           
-          return(<Text style={{color:colortext,fontSize:sizefont,fontFamily:familyname}}> Archivos XML Pendientes</Text>)
+          return(<Text style={{color:colortext,fontSize:sizefont,fontFamily:familyname}}> Archivos XML</Text>)
         },
         
         drawerIcon: ({size, color})=>(<MaterialCommunityIcons name="archive-clock-outline" size={sizeicon} color={colors.iconcolor}  />),
@@ -262,7 +263,7 @@ function OpcionesCargaTabs() {
           },
           
           tabBarStyle: {
-            display: estadocomponente.isKeyboardVisible ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
+            display: estadocomponente.isKeyboardVisible || estadocomponente.camaracdc  ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
           },
            headerShown: false,
           }}
@@ -278,12 +279,15 @@ function OpcionesCargaTabs() {
               <MaterialIcons name="qr-code-scanner" color={colorico} size={24} />
             )
           },
+          tabBarStyle: {
+            display: estadocomponente.isKeyboardVisible || estadocomponente.camaracdc  ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
+          },
            headerShown: false,
           }}
       />
    
         <Tab.Screen name="CargaCdc" 
-        component={CargaCdc} 
+        component={CamraCdc} 
         options={{
           tabBarLabel: 'CDC',
           tabBarIcon: ({ color, size,focused }) => {
@@ -296,7 +300,7 @@ function OpcionesCargaTabs() {
             )
           },
           tabBarStyle: {
-            display: estadocomponente.isKeyboardVisible ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
+            display: estadocomponente.isKeyboardVisible || estadocomponente.camaracdc  ? 'none' : 'flex', // Ocultar el Tab si el teclado está visible
           },
           headerShown: false,
           }}
@@ -382,33 +386,7 @@ function MainTabs({ navigation }) {
             }}
         />
        
-      {/* <Tab.Screen
-          name="CentralButton"
-          component={() => null}
-          options={{
-            tabBarButton: () => (
-              <TouchableOpacity style={{
-                position: 'absolute',
-                bottom: 15,
-                left: '50%',
-                transform: [{ translateX: -30 }], 
-                width: 60,
-                height: 60,
-                borderRadius: 30,
-                backgroundColor: '#57DCA3',
-                justifyContent: 'center',
-                alignItems: 'center',
-                elevation: 10, 
-              }}
-              onPress={handlePress}
-              >
-                <FontAwesome6 name="add" size={40} color="white" />
-              </TouchableOpacity>
-            ),
-            tabBarStyle: { display: 'none' }, // Ocultar la barra de este tab
-            headerShown: false,
-          }}
-        /> */}
+      
         <Tab.Screen name="ListadoFacturas" 
           component={ListadoFacturas} 
           options={{
@@ -520,6 +498,7 @@ function NavigationLogin(){
     <StackInicio.Navigator screenOptions={{ headerShown: true }}>
       <StackInicio.Screen name="Login" component={Loginv3} options={{headerShown: false}}/>
       <StackInicio.Screen name="RegistroUsuario" component={RegistroUsuario} options={{headerShown: false}}/>
+      <StackInicio.Screen name="RecuperacionConraseña" component={RecuperacionConraseña} options={{headerShown: false}}/>
       
     </StackInicio.Navigator>
   );

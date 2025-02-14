@@ -8,10 +8,8 @@ import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
 
 import { AuthContext } from '../../../AuthContext';
 import AndroidXmlHandler from '../../XmlHandler/AndroidXmlHandler';
+import FolderHandler from '../../FolderHandler/FolderHandler';
 
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 const ListaArchivos= ({ navigation }) => {
     const { estadocomponente } = useContext(AuthContext);
@@ -34,8 +32,8 @@ const ListaArchivos= ({ navigation }) => {
     const [cantarchivos,setCantarchivos]=useState(0)
     const [cant_no,setCant_no]=useState(0)
     const [cant_si,setCant_si]=useState(0)
-
-    const [selectedButton, setSelectedButton] = useState('TODOS')
+    const [existe,setExiste]=useState(false)
+    const [selectedButton, setSelectedButton] = useState('PENDIENTES')
 
     const agregarCero = (numero) => (numero < 10 ? `0${numero}` : numero);
 
@@ -98,8 +96,24 @@ const ListaArchivos= ({ navigation }) => {
         const unsubscribe = navigation.addListener('focus', () => {
             actualizarEstadocomponente('tituloloading','BUSCANDO ARCHIVOS XML..')
             actualizarEstadocomponente('loading',true)
+
             const cargardatos=async()=>{
-                await checkDirectoryAccess()
+              try{
+
+                const dato= await FolderHandler.checkIfDirectoryExists();
+                setExiste(dato) 
+                if (dato){
+
+                  await checkDirectoryAccess()
+                }
+              }catch (error) {
+                      Alert.alert("Error", "Error de lectura de carpeta MyTaxes");
+                      actualizarEstadocomponente('tituloloading','')
+                      actualizarEstadocomponente('loading',false)
+                  } finally {
+                    actualizarEstadocomponente('tituloloading','')
+                    actualizarEstadocomponente('loading',false)
+                    }
     
             }
         cargardatos()
@@ -312,262 +326,202 @@ const ListaArchivos= ({ navigation }) => {
           {/* <ScreensCabecera title={title} backto={backto} estadosupdate={estadosupdate}></ScreensCabecera> */}
           <View style={[styles.cabeceracontainer,{backgroundColor:colors.card}]}>
 
-                  {/* {!busqueda &&( 
-                          <TouchableOpacity onPress={openbusqueda}>
-                              
-                              <FontAwesome name="search" size={24} color={colors.iconcolor}/>
-                              
-                          </TouchableOpacity>
-                  )} */}
-
-                  {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Historial de Archivos</Text>)}
-                  {/* {busqueda &&(
-
-                  <Animated.View style={{ borderWidth:1,backgroundColor:'rgba(28,44,52,0.1)',borderRadius:10,borderColor:'white',flexDirection: 'row',alignItems: 'center',width:'80%',opacity: fadeAnim}}>
-                    <TextInput 
-                          style={{color:'white',padding:5,flex: 1,fontFamily:fonts.regular.fontFamily}} 
-                          placeholder="N° Factura o Empresa.."
-                          placeholderTextColor='gray'
-                          value={textobusqueda}
-                          onChangeText={textobusqueda => realizarbusqueda(textobusqueda)}
-                          >
-
-                    </TextInput>
-
-                    <TouchableOpacity style={{ position: 'absolute',right: 10,}} onPress={closebusqueda} >  
-                      <AntDesign name="closecircleo" size={20} color={colors.iconcolor} />
-                    </TouchableOpacity>
-                  </Animated.View>
-                  )
-                  } */}
-                    
-      
-                </View>
-          
-            {hasAccess && (
-
-                dataarchivos.length > 0 ? (
-
-                  <View style={{flex: 1,}}> 
-
-                    <View style={{borderBottomWidth:2,
-                                  // borderBottomLeftRadius:20,
-                                  // borderLeftWidth:1,
-                                  marginLeft:5,
-                                  // borderRightWidth:1,
-                                  // borderBottomRightRadius:20,
-                                  marginRight:5
-                                  }}> 
-
-                      <View style={{ paddingLeft:20,paddingRight:20,paddingTop:10,paddingBottom:10,  flexDirection: "row", width: "100%",justifyContent: "space-between",}} >
-                        <TouchableOpacity 
-                        style={[
-                          styles.botonopciones,
-                          selectedButton === 'TODOS' && { backgroundColor: colors.acctionsbotoncolor }
-                        ]}
-                        onPress={() => handleButtonPress('TODOS')}
-                        >
-                          <Text style={[styles.textoBoton,
-                            
-                            selectedButton === 'TODOS' && {color: 'white',},
-                            selectedButton === 'TODOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                            
-                            
-                          ]}
-                          >TODOS</Text>
-                        </TouchableOpacity >
+              {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Historial de Archivos</Text>)}
+              
+          </View>
 
 
+          {
+            existe ?(
+              <>
+                {hasAccess && (
 
-                        <TouchableOpacity 
-                        style={[
-                          styles.botonopciones,
-                          selectedButton === 'PENDIENTES' && { backgroundColor: colors.acctionsbotoncolor }
-                        ]}
-                        onPress={() => handleButtonPress('PENDIENTES')}
-                        >
-                          <Text style={[styles.textoBoton,
-                            
-                            selectedButton === 'PENDIENTES' && {color: 'white',},
-                            selectedButton === 'PENDIENTES' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                            
-                            
-                          ]}
-                          >PENDIENTES</Text>
-                        </TouchableOpacity >
+                          dataarchivos.length > 0 ? (
 
+                            <View style={{flex: 1,}}> 
 
-                        <TouchableOpacity 
-                        style={[
-                          styles.botonopciones,
-                          selectedButton === 'PROCESADOS' && { backgroundColor: colors.acctionsbotoncolor }
-                        ]}
-                        onPress={() => handleButtonPress('PROCESADOS')}
-                        >
-                          <Text style={[styles.textoBoton,
-                            
-                            selectedButton === 'PROCESADOS' && {color: 'white',},
-                            selectedButton === 'PROCESADOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                            
-                            
-                          ]}
-                          >PROCESADOS</Text>
-                        </TouchableOpacity >
+                              <View style={{borderBottomWidth:2,
+                                            // borderBottomLeftRadius:20,
+                                            // borderLeftWidth:1,
+                                            marginLeft:5,
+                                            // borderRightWidth:1,
+                                            // borderBottomRightRadius:20,
+                                            marginRight:5
+                                            }}> 
 
-
-
-                      </View>
-                    </View>
-
-
-                    <View style={{padding:15,marginBottom:90 }}>
-                        
-
-                        <FlatList
-                        data={dataarchivos}
-                        renderItem={({ item }) => {
-                            return (
-                            <TouchableOpacity style={styles.contenedordatos}
-                                onPress={() => {seleccionar_archivo(item)  }}
-                            >
-            
-                                <Text
-                                style={[
-                                    styles.textocontenido,
-                                    { color: colors.text, fontFamily: fonts.regularbold.fontFamily },
-                                ]}
-                                >
-                                {item.nombrearchivo}
-                                </Text>
-                                <Text
-                                style={[
-                                    styles.textocontenido,
-                                    { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
-                                ]}
-                                >
-                                Fecha Descarga: {item.fechadescarga}
-                                </Text>
-
-
-                                <View style={{flexDirection: "row", width: "100%"}}>
-                                    
-
-                                        <Text
-                                        style={[
-                                            styles.textocontenido,
-                                            { color: colors.textsub, fontFamily: fonts.regular.fontFamily,marginRight:20 },
-                                        ]}
-                                        >
-                                        Procesado: {item.procesado}
-                                        </Text>
-                                    
-                                    <Text
-                                    style={[
-                                        styles.textocontenido,
-                                        { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
+                                <View style={{ paddingLeft:20,paddingRight:20,paddingTop:10,paddingBottom:10,  flexDirection: "row", width: "100%",justifyContent: "space-between",}} >
+                                  <TouchableOpacity 
+                                  style={[
+                                    styles.botonopciones,
+                                    selectedButton === 'TODOS' && { backgroundColor: colors.acctionsbotoncolor }
+                                  ]}
+                                  onPress={() => handleButtonPress('TODOS')}
+                                  >
+                                    <Text style={[styles.textoBoton,
+                                      
+                                      selectedButton === 'TODOS' && {color: 'white',},
+                                      selectedButton === 'TODOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                      
+                                      
                                     ]}
-                                    >
-                                    Fecha :{item.fechaprocesado}
-                                    </Text>
+                                    >TODOS</Text>
+                                  </TouchableOpacity >
+
+
+
+                                  <TouchableOpacity 
+                                  style={[
+                                    styles.botonopciones,
+                                    selectedButton === 'PENDIENTES' && { backgroundColor: colors.acctionsbotoncolor }
+                                  ]}
+                                  onPress={() => handleButtonPress('PENDIENTES')}
+                                  >
+                                    <Text style={[styles.textoBoton,
+                                      
+                                      selectedButton === 'PENDIENTES' && {color: 'white',},
+                                      selectedButton === 'PENDIENTES' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                      
+                                      
+                                    ]}
+                                    >PENDIENTES</Text>
+                                  </TouchableOpacity >
+
+
+                                  <TouchableOpacity 
+                                  style={[
+                                    styles.botonopciones,
+                                    selectedButton === 'PROCESADOS' && { backgroundColor: colors.acctionsbotoncolor }
+                                  ]}
+                                  onPress={() => handleButtonPress('PROCESADOS')}
+                                  >
+                                    <Text style={[styles.textoBoton,
+                                      
+                                      selectedButton === 'PROCESADOS' && {color: 'white',},
+                                      selectedButton === 'PROCESADOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                      
+                                      
+                                    ]}
+                                    >PROCESADOS</Text>
+                                  </TouchableOpacity >
+
+
+
                                 </View>
+                              </View>
 
-                            </TouchableOpacity>
-                            );
-                        }}
-                        keyExtractor={(item) => item.key}
-                        />
-                    </View>
+
+                              <View style={{padding:15,marginBottom:90 }}>
+                                  
+
+                                  <FlatList
+                                  data={dataarchivos}
+                                  renderItem={({ item }) => {
+                                      return (
+                                      <TouchableOpacity style={styles.contenedordatos}
+                                          onPress={() => {seleccionar_archivo(item)  }}
+                                      >
+
+                                          <Text
+                                          style={[
+                                              styles.textocontenido,
+                                              { color: colors.text, fontFamily: fonts.regularbold.fontFamily },
+                                          ]}
+                                          >
+                                          {item.nombrearchivo}
+                                          </Text>
+                                          <Text
+                                          style={[
+                                              styles.textocontenido,
+                                              { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
+                                          ]}
+                                          >
+                                          Fecha Descarga: {item.fechadescarga}
+                                          </Text>
+
+
+                                          <View style={{flexDirection: "row", width: "100%"}}>
+                                              
+
+                                                  <Text
+                                                  style={[
+                                                      styles.textocontenido,
+                                                      { color: colors.textsub, fontFamily: fonts.regular.fontFamily,marginRight:20 },
+                                                  ]}
+                                                  >
+                                                  Procesado: {item.procesado}
+                                                  </Text>
+                                              
+                                              <Text
+                                              style={[
+                                                  styles.textocontenido,
+                                                  { color: colors.textsub, fontFamily: fonts.regular.fontFamily },
+                                              ]}
+                                              >
+                                              Fecha :{item.fechaprocesado}
+                                              </Text>
+                                          </View>
+
+                                      </TouchableOpacity>
+                                      );
+                                  }}
+                                  keyExtractor={(item) => item.key}
+                                  />
+                              </View>
+                            </View>
+                          ):(
+                              <View style={styles.containerobjets}> 
+                                  <LottieView
+                                          source={require('../../../assets/nodata.json')}
+                                          style={{ width: 300, height: 300 }}
+                                          autoPlay
+                                          loop
+                                        />
+                              </View>
+                          )
+                          )
+                          }
+
+                {hasAccess &&(
+                              <View style={styles.resumencontainer}>
+                              
+                                  <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
+                                          <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Cantidad Archivos:</Text>{' '}
+                                          {Number(cantarchivos).toLocaleString('es-ES')} 
+                                  </Text>
+
+                                  <View style={{flexDirection:'row',justifyContent: "space-between"}}>
+
+                                  <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
+                                      <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Procesados:</Text>{' '}
+                                      {Number(cant_si).toLocaleString('es-ES')}
+                                  </Text>
+                                  <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily,marginLeft:50}]}>
+                                      <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Pendientes:</Text>{' '}
+                                      {Number(cant_no).toLocaleString('es-ES')}
+                                  </Text>
+                                  </View>
+                                  
+                                  
+                              </View>
+                          )
+                  }
+              </>
+            ):(
+              <View style={styles.containercentral}>
+                  <LottieView source={require("../../../assets/alert.json")} style={{ width: 300, height: 300 }} autoPlay loop />
+                  <View style={[styles.labelcdc, { marginLeft: 14 }]}>
+                    <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily }}>
+                      Debe configurar la carpeta "MyTaxes". Vaya al apartado de configuraciones.
+                    </Text>
                   </View>
-
-
-
-                ):(
-                    <View style={styles.containerobjets}> 
-                        <LottieView
-                                source={require('../../../assets/nodata.json')}
-                                style={{ width: 300, height: 300 }}
-                                autoPlay
-                                loop
-                              />
-                    </View>
-                )
-
-
-
+              </View>
             )
-            }
+          }
 
 
-              {!hasAccess && (
-              
-                <View style={{width:'100%',paddingRight:5,paddingLeft:5}}> 
 
-                      <TouchableOpacity 
-                        style={{ 
-                          backgroundColor: filefound ? colors.acctionsbotoncolor : 'gray', // Cambia el color si está deshabilitado
-                          marginTop: 50,
-                          marginBottom: 50,
-                          height: 40,
-                          justifyContent: 'center', 
-                          alignItems: 'center', 
-                          borderRadius: 20,
-                          flexDirection: 'row', // Alinea los elementos en fila
-                          paddingHorizontal: 10, // Espaciado interno
-                          opacity: filefound ? 1 : 0.5, // Reduce opacidad si está deshabilitado
-                        }} 
-                        onPress={handleSelectDirectory}
-                        disabled={!filefound} // Deshabilita si found es false
-                      >
-                        <Text style={{
-                          fontSize: 16,
-                          color: 'black', // Cambiar según el diseño
-                          fontFamily: fonts.regularbold.fontFamily, // Personaliza la fuente
-                          marginRight: 8, // Espacio entre el texto y el icono
-                        }}>
-                         Seleccionar Directorio MyTaxes
-                        </Text>
-                        <MaterialCommunityIcons name="access-point-check" size={24} color="black" />
-                      </TouchableOpacity>
-                      
-                        <Text style={{fontSize: 13,
-                          color: 'red', // Cambiar según el diseño
-                          fontFamily: fonts.regular.fontFamily, // Personaliza la fuente
-                          
-                          
-                          }}
-                          >No se encontraron permisos para acceder a la carpeta de descarga, pulse el boton de seleccionar</Text>
-                      
-                  </View>
-
-                
-              )}
-        
-              
-             {
-                hasAccess &&(
-                    <View style={styles.resumencontainer}>
-                    
-                        <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
-                                <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Cantidad Archivos:</Text>{' '}
-                                {Number(cantarchivos).toLocaleString('es-ES')} 
-                        </Text>
-
-                        <View style={{flexDirection:'row',justifyContent: "space-between"}}>
-
-                        <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily}]}>
-                            <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Procesados:</Text>{' '}
-                            {Number(cant_si).toLocaleString('es-ES')}
-                        </Text>
-                        <Text style={[styles.contenedortexto,{ color:colors.text, fontFamily: fonts.regular.fontFamily,marginLeft:50}]}>
-                            <Text style={[styles.labeltext,{ fontFamily: fonts.regularbold.fontFamily}]}>Pendientes:</Text>{' '}
-                            {Number(cant_no).toLocaleString('es-ES')}
-                        </Text>
-                        </View>
-                        
-                        
-                    </View>
-                )
-             }
+          
+            
               
         
               
@@ -651,6 +605,11 @@ const styles = StyleSheet.create({
       color: 'black',
       
     },
+    containercentral:{
+      flex: 1,                // Ocupa todo el espacio disponible
+      justifyContent: 'center', // Centra verticalmente
+      alignItems: 'center', 
+    }
     
   });
 export default ListaArchivos

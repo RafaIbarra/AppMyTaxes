@@ -120,7 +120,7 @@ const CargaArchivoXml= ({ navigation }) => {
         try {
          const data= await AndroidXmlHandler.uploadXmlFile(
             fileUri);
-          //console.log(data)
+     
           actualizarEstadocomponente('factura_editar',0)
           setStatus('Archivo subido correctamente');
           actualizarEstadocomponente('datafactura',data)

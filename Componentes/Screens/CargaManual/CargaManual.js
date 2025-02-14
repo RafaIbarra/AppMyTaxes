@@ -94,7 +94,7 @@ function CargaManual({ navigation }){
           actualizarEstadocomponente('tituloloading','REGISTRANDO FACTURA MANUAL..')
         }
          actualizarEstadocomponente('loading',true)
-        //console.log(parseFloat(articulos10.replace(/\./g, "")) || 0)
+       
         const detallefactura = [
           {
             concepto:'Articulos al 10%',
@@ -116,7 +116,7 @@ function CargaManual({ navigation }){
           }
 
         ]
-       // console.log(detallefactura)
+    
         const jsonData = JSON.stringify(detallefactura);
         const fechaFormateada= moment(fechafactura).format('YYYY-MM-DD')
         const datosregistrar = {
@@ -163,7 +163,7 @@ function CargaManual({ navigation }){
           showDialog(true)
           
           setMensajeerror( handleError(result['data']['error']))
-        //console.log(result['data']['error'])
+     
         //volver()
         // navigate("MainTabs2", { })
         

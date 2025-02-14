@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import {  StyleSheet,View,TouchableOpacity,TextInput,Text,ScrollView,Dimensions  } from "react-native";
+import {  StyleSheet,View,TouchableOpacity,TextInput,Text,ScrollView,Dimensions,Animated   } from "react-native";
 import { DataTable,Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
 
@@ -7,12 +7,13 @@ import { AuthContext } from '../../../AuthContext';
 import { useNavigation  } from "@react-navigation/native";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-
+import LottieView from 'lottie-react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
-import ScreensCabeceraRegistro from '../../ScreensCabeceraRegistro/ScreensCabeceraRegistro';
+
 import Generarpeticion from '../../../Apis/peticiones';
 
-
+const { width } = Dimensions.get('window')
 function DetalleFactura({ navigation }){
     const [title,setTitle]=useState('DETALLE FACTURA')
     const [backto,setBackto]=useState('MainTabs2')
@@ -47,7 +48,9 @@ function DetalleFactura({ navigation }){
     const showDialog = () => setVisibledialogo(true);
     const hideDialog = () => setVisibledialogo(false);
 
-
+    
+    const [mostrarOpciones, setMostrarOpciones] = useState(false); // Para controlar si se muestran los botones de editar y eliminar
+    const [animacion] = useState(new Animated.Value(0));
     const [visibledialogoeliminar, setVisibledialogoeliminar] = useState(false)
     const showDialogeliminar = () => setVisibledialogoeliminar(true);
     const hideDialogeliminar = () => setVisibledialogoeliminar(false);
@@ -64,6 +67,21 @@ function DetalleFactura({ navigation }){
     };
 
 
+    const toggleOpciones = () => {
+      setMostrarOpciones(!mostrarOpciones);
+  
+      // Al mostrar opciones, comenzamos la animación
+      Animated.timing(animacion, {
+        toValue: mostrarOpciones ? 0 : 1, // Hacer la animación de 0 a 1
+        duration: 700, // Duración en 500ms para un desplazamiento fluido
+        useNativeDriver: true, // Usamos el driver nativo para mejorar el rendimiento
+      }).start();
+    };
+  
+    const animarDesplazamiento = animacion.interpolate({
+      inputRange: [0, 1],
+      outputRange: [width, 0], // Desplazamiento de derecha a izquierda
+    });
     const volver=()=>{
       
       navigation.navigate('MainTabs2', {
@@ -83,7 +101,7 @@ function DetalleFactura({ navigation }){
         // });
         navigate("EditarFactura")
       }else{
-        //console.log('NO SE PUEDE EDITAR')
+
         showDialog(true)
         setMensajeerror( 'Solo las facturas cargadas en forma manual se pueden editar')
       }
@@ -215,6 +233,9 @@ function DetalleFactura({ navigation }){
         setNombreempresa(valor)
    
       }
+    const formatNumber = (num) => {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      };
       const from = 0;
       const to = 10;
       const tamañoletratabla=10
@@ -223,8 +244,8 @@ function DetalleFactura({ navigation }){
     useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
         
-        
-        if(estadocomponente.factura_editar >0){
+        const codigofactura=estadocomponente.factura_editar
+        if(codigofactura >0){
         
           setModoedicion(true)
           
@@ -251,21 +272,21 @@ function DetalleFactura({ navigation }){
           setFechaoperacion(fechaFormateada)
           setNrofactura(data?.numero_factura || '')
           setCdcarchivo(data?.cdc || '')
+          
           const totales={
-            total_operacion: data?.total_factura || '',
-            liq_iva10: data?.iva10 || '',
-            liq_iva5: data?.iva5 || '',
-            total_iva: data?.liquidacion_iva || '',
+            // total_operacion: data?.total_factura || '',
+            //codigofactura > 0 ? (data?.liquidacion_iva || '') : formatNumber(data?.liquidacion_iva || ''),
+            total_operacion : codigofactura > 0 ? (data?.total_factura || '') : formatNumber(data?.total_factura || ''),
+            liq_iva10: codigofactura > 0 ? (data?.iva10 || '') : formatNumber(data?.iva10 || ''),
+            liq_iva5: codigofactura > 0 ? (data?.iva5 || '') : formatNumber(data?.iva5 || ''),
+            total_iva: codigofactura > 0 ? (data?.liquidacion_iva || '') : formatNumber(data?.liquidacion_iva || ''),
           }
           setDatamontos(totales)
           const conceptosreg = data?.DetalleFactura;
           
-          const conceptosConKey = conceptosreg.map((item, index) => ({
-            ...item,  // Copia todas las propiedades del objeto
-            key: index.toString(),  // Agrega una key única, en este caso usamos el índice
-          }));
-          setCantidadconceptos(conceptos.length)
-          setConceptos(conceptosConKey)
+          setCantidadconceptos(data?.CantidadConceptos || 0)
+          setConceptos(conceptosreg)
+          
         }
         
       })
@@ -283,8 +304,7 @@ function DetalleFactura({ navigation }){
       <PaperProvider >
 
         <View style={{ flex: 1 }}>
-          {/* {modoedicion &&(<ScreensCabeceraRegistro title={title} backto={backto}></ScreensCabeceraRegistro>)}
-          {!modoedicion &&(<ScreensCabecera title={title} backto={backto} ></ScreensCabecera>)} */}
+
           <ScreensCabecera title={title} backto={backto} reiniciar_componentes={false}></ScreensCabecera>
 
             <Portal>
@@ -409,7 +429,7 @@ function DetalleFactura({ navigation }){
                       <ScrollView nestedScrollEnabled={true}>
                         <DataTable>
                           {conceptos.map((item) => (
-                            <DataTable.Row key={item.key}>
+                            <DataTable.Row key={item.id}>
                               <DataTable.Cell style={{ flex: 2 }} textStyle={{ fontSize: tamañoletratabla, fontFamily: fonts.regular.fontFamily }}>
                                 {item.concepto}
                               </DataTable.Cell>
@@ -496,10 +516,7 @@ function DetalleFactura({ navigation }){
 
                         <TouchableOpacity 
                           style={{ 
-                            // position: 'absolute',
-                            // bottom: 30, 
-                            // left: 10,   
-                            // right: 10,  
+ 
                             backgroundColor: colors.acctionsbotoncolor, 
                             height: 40,
                             justifyContent: 'center', 
@@ -525,30 +542,12 @@ function DetalleFactura({ navigation }){
 
                   }
 
-                  {/* {modoedicion &&(
-
-                  <View style={{ flexDirection: "row", width: "100%",left:'35%'}}>
-
-                      
-
-                      <TouchableOpacity style={[styles.botoncabecera,{ backgroundColor:'#57DCA3',marginRight:10}]} onPress={editar_registro}>
-                          <AntDesign name="edit" size={30} color="white" />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity style={[styles.botoncabecera,{ backgroundColor:'red'}]} onPress={showDialogeliminar}>
-                          <MaterialIcons name="delete-forever" size={30} color="white" />
-                      </TouchableOpacity>
-                          
-                  </View>
-                  )
-
-                  } */}
 
                 </View>
 
             </View >
               
-            {modoedicion &&(
+            {/* {modoedicion &&(
 
                   <View style={{ backgroundColor: 'rgba(128, 128, 128, 0.5)',borderWidth:1,borderRadius:50,
                   paddingLeft:20, paddingBottom:10,paddingTop:10,
@@ -568,8 +567,75 @@ function DetalleFactura({ navigation }){
                   </View>
                   )
 
-                  }
-              
+                  } */}
+              {modoedicion && (
+        <>
+          {!mostrarOpciones ? (
+            <View
+              style={{
+                paddingLeft: 20,
+                paddingBottom: 10,
+                paddingTop: 10,
+                position: 'absolute',
+                bottom: '5%',
+                left: '80%',
+              }}
+            >
+              <TouchableOpacity
+                style={[styles.botoncabecera, { marginBottom: 10 }]}
+                onPress={toggleOpciones}
+              >
+                <LottieView
+                  source={require('../../../assets/options.json')}
+                  style={{ width: '300%', height: '300%' }}
+                  autoPlay
+                  loop
+                />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{
+              backgroundColor: 'rgba(128, 128, 128, 0.5)',borderWidth:1,borderRadius:50,
+                  paddingLeft:20, paddingBottom:10,paddingTop:10,
+
+                  position: "absolute", bottom: '5%', left: '80%', width: "100%"
+
+            }}>
+
+              <Animated.View
+                style={{
+                  // backgroundColor: 'rgba(128, 128, 128, 0.5)',
+                  
+                  left: 0, // Aseguramos que el componente comience en el borde izquierdo
+                  transform: [{ translateX: animarDesplazamiento }], // Desplazamiento animado
+                  width: width, // Ancho completo de la pantalla
+                }}
+              >
+                <TouchableOpacity
+                  style={[styles.botoncabecera, { backgroundColor: '#57DCA3', marginBottom: 10 }]}
+                  onPress={editar_registro}
+                >
+                  <AntDesign name="edit" size={30} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{  marginBottom: -5,marginTop:-25,right:39 }}
+                  onPress={toggleOpciones}
+                >
+                  <Ionicons name="play-skip-forward" size={24} color="black" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.botoncabecera, { backgroundColor: 'red' }]}
+                  onPress={showDialogeliminar}
+                >
+                  <MaterialIcons name="delete-forever" size={30} color="white" />
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          )}
+        </>
+      )}
               
               
       

@@ -103,7 +103,7 @@ function RegistroUsuario({ navigation  }){
         
         setMostrarContrasena(!mostrarContrasena);
       };
-      const toggleMostrarContrasena2 = () => {
+    const toggleMostrarContrasena2 = () => {
         
         setMostrarContrasena2(!mostrarContrasena2);
       };

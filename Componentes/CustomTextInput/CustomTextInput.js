@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Animated, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text,TextInput, StyleSheet, Animated, Pressable, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
 const CustomTextInput = ({
@@ -138,7 +138,7 @@ const CustomTextInput = ({
         />
       </View>
 
-      {rightIcon && (
+      {rightIcon ? (
         <TouchableOpacity
           onPress={(e) => {
             e.stopPropagation();
@@ -150,7 +150,10 @@ const CustomTextInput = ({
         >
           {rightIcon}
         </TouchableOpacity>
-      )}
+      ):(
+        null
+      )
+    }
     </View>
   );
 };

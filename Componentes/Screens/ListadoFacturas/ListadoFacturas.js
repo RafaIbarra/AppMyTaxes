@@ -246,7 +246,7 @@ function ListadoFacturas({ navigation }){
 
     useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
-        //console.log('Listado',estadocomponente.complistado)
+     
         //setCargacopleta(false)
         actualizarEstadocomponente('factura_editar',0)
         const cargardatos=async()=>{

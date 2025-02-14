@@ -13,8 +13,8 @@ class FolderHandler {
 
   async initializeFromStorage() {
     try {
-      //const savedUri = await AsyncStorage.getItem(DIRECTORY_URI_KEY);
-      const savedUri = 'content://com.android.externalstorage.documents/tree/primary%3ADownload';
+      const savedUri = await AsyncStorage.getItem(DIRECTORY_URI_KEY);
+      //const savedUri = 'content://com.android.externalstorage.documents/tree/primary%3ADownload';
       if (savedUri) {
         this.selectedDirectory = { uri: savedUri };
       }
@@ -45,88 +45,114 @@ class FolderHandler {
     }
   }
 
-  async createMyTaxesFolder () {
+  async createMyTaxesFolder() {
     try {
-        
-      // Primero solicitamos permiso para acceder a Downloads
-      const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
-        // En Android 11+, necesitas usar el URI de Downloads
-        DOWNLOADS_FOLDER
-      );
-  
-      if (permission.granted) {
-        // Intentamos crear el archivo que servirá como marcador de carpeta
-        
-        const newFolderUri = await FileSystem.StorageAccessFramework.createFileAsync(
-            permission.directoryUri,
-          //'.MyTaxes', // Usando un archivo oculto como marcador de carpeta
-          'application/octet-stream'
-        );
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-      
-        if (!permissions.granted) {
-          throw new Error('Permiso denegado para acceder al directorio');
+        // Solicitar permiso para acceder a un directorio
+        const permission = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+        if (permission.granted) {
+            const directoryUri = permission.directoryUri;
+
+            // Verificar si el directorio contiene "Download" y "MyTaxes"
+            if (directoryUri.includes("Download") && directoryUri.includes("MyTaxes")) {
+                
+                // Crear un archivo oculto como marcador de carpeta
+                const newFolderUri = await FileSystem.StorageAccessFramework.createFileAsync(
+                    directoryUri,
+                    '.MyTaxes', 
+                    'application/octet-stream'
+                );
+                
+
+                // Guardar el URI del directorio en AsyncStorage
+                await AsyncStorage.setItem(DIRECTORY_URI_KEY, directoryUri);
+                this.selectedDirectory = { uri: directoryUri };
+
+                return true;
+            } else {
+              Alert.alert(
+                "Error al verificar el directorio",
+                "Cree la carpeta 'MyTaxes' dentro de la carpeta 'Download'!",
+                [{ text: "OK" }]
+              );
+                
+                return false;
+            }
+        } else {
+            Alert.alert("Permiso denegado");
+            return false;
         }
-
-        // Guardar el URI del directorio
-        const directoryUri = permissions.newFolderUri;
-        this.selectedDirectory = { uri: directoryUri };
-        await AsyncStorage.setItem(DIRECTORY_URI_KEY, directoryUri);
-        Alert.alert('Carpeta creada exitosamente');
-        return true;
-      } else {
-        
-       Alert.alert(`Permiso denegado`);
-        return false
-      }
     } catch (error) {
-       Alert.alert(`Error al crear la carpeta: ${error} `);
-        return false
+        Alert.alert(`Error al crear la carpeta: ${error}`);
+        
+        return false;
     }
-  };
+}
 
+
+
+async checkIfDirectoryExists() {
+  try {
+      const savedUri = await AsyncStorage.getItem(DIRECTORY_URI_KEY);
+
+      if (!savedUri || typeof savedUri !== 'string') {
+        
+          return false;
+      }
+
+      // Verificar si la URI realmente apunta a la carpeta "MyTaxes"
+      if (!savedUri.includes("Download") || !savedUri.includes("MyTaxes")) {
+        
+          return false;
+      }
+
+      // Intentar leer el contenido del directorio
+      try {
+          const files = await FileSystem.StorageAccessFramework.readDirectoryAsync(savedUri);
+          
+          return true; // Si no hay error, el directorio existe
+      } catch (error) {
+      
+          return false;
+      }
+  } catch (error) {
+
+      Alert.alert("Error al verificar el directorio:", error.message);
+      return false;
+  }
+}
 
  
 
-  async checkIfDirectoryExists() {
+  // async checkIfDirectoryExists() {
     
-    try {
-      // Comprobar si la URI del directorio seleccionado está disponible
-      if (!this.selectedDirectory || !this.selectedDirectory.uri) {
-        throw new Error('No se ha seleccionado un directorio.');
-      }
-  
-      // Intentar acceder al directorio y comprobar si está disponible
-      //const directoryUri = DOWNLOADS_FOLDER
-      const directoryUri = 'content://com.android.externalstorage.documents/tree/primary%3ADownload%2FMyTaxes/document/primary%3ADownload%2FMyTaxes%'
+  //   try {
+
+  //     const savedUri = await AsyncStorage.getItem(DIRECTORY_URI_KEY);
+
+
+  //       if (savedUri && typeof savedUri === 'string' && savedUri.includes("MyTaxes")) {
+  //         try {
+  //             const files = await FileSystem.StorageAccessFramework.readDirectoryAsync(savedUri);
+                
+  //               return true; // Si no lanza error, el directorio existe
+  //           } catch (error) {
+  //               Alert.alert('El directorio no existe o no se puede acceder:', error);
+  //               return false;
+  //           }
+
+  //     } else {
+  //         return false;
+  //     }
+   
+  //   } catch (error) {
       
-      
-      
-      // Intentar leer el directorio, si ocurre un error puede significar que el directorio ya no es accesible
-      const files = await FileSystem.StorageAccessFramework.readDirectoryAsync(directoryUri);
-      
-      // Verificar si se pudieron leer los archivos
-      if (files && files.length > 0) {
-        //Alert.alert('El directorio "MyTaxes" existe y contiene archivos.');
-        return true;
-      } else {
-        Alert.alert('El directorio "MyTaxes" está vacío.');
-        return true;
-      }
-    } catch (error) {
-      // Si el error es por el directorio no accesible (como renombrado o eliminado)
-      if (error.message.includes('isn\'t readable')) {
-        //console.log('El directorio ha sido renombrado o eliminado. Solicita al usuario seleccionar un nuevo directorio.');
-        // Aquí podrías pedir al usuario que seleccione nuevamente un directorio
-        return false;
-      }
-  
-      // Si hay otros errores
+  //     Alert.alert(`Error al verificar el directorio: ${error} `);
+  //     return false
         
-      Alert.alert(`Error al verificar el directorio: ${error} `);
       
-    }
-  }
+  //   }
+  // }
 
 
   
@@ -136,3 +162,4 @@ class FolderHandler {
 }
 
 export default new FolderHandler();
+
