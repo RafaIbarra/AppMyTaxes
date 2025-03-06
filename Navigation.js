@@ -31,6 +31,7 @@ import CargaArchivoXml from "./Componentes/Screens/CargaArchivoXml/CargaArchivoX
 import Cargando from "./Componentes/Procesando/Cargando";
 import ListaArchivos from "./Componentes/Screens/ListaArchivos/ListaArchivos";
 import Configuraciones from "./Componentes/Screens/Configuraciones/Configuraciones";
+import Compartir from "./Componentes/Screens/Compartir/Compartir";
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Ionicons } from "@expo/vector-icons";
@@ -207,6 +208,24 @@ function DrawerInicio({navigation}){
         
         }}
       />
+      <Drawer.Screen name="Compartir" 
+      component={Compartir}
+      options={{
+       
+        drawerLabel: ({ color, size,focused }) => {
+          let colortext
+          colortext = focused ? colors.acctionsbotoncolor : colors.textsub;
+          let familyname
+          familyname= focused ? fonts.regularbold.fontFamily : fonts.regular.fontFamily;
+          
+          return(<Text style={{color:colortext,fontSize:sizefont,fontFamily:familyname}}>Compartir</Text>)
+        },
+        
+        drawerIcon: ({size, color})=>(<AntDesign name="sharealt" size={sizeicon} color={colors.iconcolor}  />),
+        drawerItemStyle:{borderBottomWidth:1,borderBottomColor:'white',marginBottom:5,marginTop:20}
+        
+        }}
+      />
   
   </Drawer.Navigator>
   )
@@ -287,7 +306,7 @@ function OpcionesCargaTabs() {
       />
    
         <Tab.Screen name="CargaCdc" 
-        component={CamraCdc} 
+        component={CargaCdc} 
         options={{
           tabBarLabel: 'CDC',
           tabBarIcon: ({ color, size,focused }) => {

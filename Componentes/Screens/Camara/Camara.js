@@ -22,6 +22,7 @@ function Camara({ navigation }) {
         }
     };
     const handleBarcodeScanned = async ({ data, bounds }) => {
+        
       if (data && !isFetching && !showAlert) { // <-- Verifica si hay una alerta activa
           if (bounds && bounds.size.width < 50 && bounds.size.height < 50) return;
 

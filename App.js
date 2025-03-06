@@ -23,6 +23,7 @@ export default function App() {
 
         setFontsLoaded(true);
       } catch (error) {
+        
         Alert.alert(`Error cargando las fuentes: ${error.message}`);
       }
     };

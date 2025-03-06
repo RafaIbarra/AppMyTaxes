@@ -329,85 +329,81 @@ const ListaArchivos= ({ navigation }) => {
               {!busqueda &&( <Text style={[styles.titulocabecera, { color: colors.textcard, fontFamily: fonts.regularbold.fontFamily}]}>Historial de Archivos</Text>)}
               
           </View>
+          { hasAccess&&(
 
+          <View style={{borderBottomWidth:2,marginLeft:5,marginRight:5}}> 
+            <View style={{ paddingLeft:20,paddingRight:20,paddingTop:10,paddingBottom:10,  flexDirection: "row", width: "100%",justifyContent: "space-between",}} >
+                            <TouchableOpacity 
+                            style={[
+                              styles.botonopciones,
+                              selectedButton === 'TODOS' && { backgroundColor: colors.acctionsbotoncolor }
+                            ]}
+                            onPress={() => handleButtonPress('TODOS')}
+                            >
+                              <Text style={[styles.textoBoton,
+                                
+                                selectedButton === 'TODOS' && {color: 'white',},
+                                selectedButton === 'TODOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                
+                                
+                              ]}
+                              >TODOS</Text>
+                            </TouchableOpacity >
+
+
+
+                            <TouchableOpacity 
+                            style={[
+                              styles.botonopciones,
+                              selectedButton === 'PENDIENTES' && { backgroundColor: colors.acctionsbotoncolor }
+                            ]}
+                            onPress={() => handleButtonPress('PENDIENTES')}
+                            >
+                              <Text style={[styles.textoBoton,
+                                
+                                selectedButton === 'PENDIENTES' && {color: 'white',},
+                                selectedButton === 'PENDIENTES' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                
+                                
+                              ]}
+                              >PENDIENTES</Text>
+                            </TouchableOpacity >
+
+
+                            <TouchableOpacity 
+                            style={[
+                              styles.botonopciones,
+                              selectedButton === 'PROCESADOS' && { backgroundColor: colors.acctionsbotoncolor }
+                            ]}
+                            onPress={() => handleButtonPress('PROCESADOS')}
+                            >
+                              <Text style={[styles.textoBoton,
+                                
+                                selectedButton === 'PROCESADOS' && {color: 'white',},
+                                selectedButton === 'PROCESADOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
+                                
+                                
+                              ]}
+                              >PROCESADOS</Text>
+                            </TouchableOpacity >
+
+
+
+            </View>
+          </View>
+          )
+
+          }
 
           {
             existe ?(
               <>
                 {hasAccess && (
 
-                          dataarchivos.length > 0 ? (
-
+                  dataarchivos.length > 0 ? (
                             <View style={{flex: 1,}}> 
 
-                              <View style={{borderBottomWidth:2,
-                                            // borderBottomLeftRadius:20,
-                                            // borderLeftWidth:1,
-                                            marginLeft:5,
-                                            // borderRightWidth:1,
-                                            // borderBottomRightRadius:20,
-                                            marginRight:5
-                                            }}> 
 
-                                <View style={{ paddingLeft:20,paddingRight:20,paddingTop:10,paddingBottom:10,  flexDirection: "row", width: "100%",justifyContent: "space-between",}} >
-                                  <TouchableOpacity 
-                                  style={[
-                                    styles.botonopciones,
-                                    selectedButton === 'TODOS' && { backgroundColor: colors.acctionsbotoncolor }
-                                  ]}
-                                  onPress={() => handleButtonPress('TODOS')}
-                                  >
-                                    <Text style={[styles.textoBoton,
-                                      
-                                      selectedButton === 'TODOS' && {color: 'white',},
-                                      selectedButton === 'TODOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                                      
-                                      
-                                    ]}
-                                    >TODOS</Text>
-                                  </TouchableOpacity >
-
-
-
-                                  <TouchableOpacity 
-                                  style={[
-                                    styles.botonopciones,
-                                    selectedButton === 'PENDIENTES' && { backgroundColor: colors.acctionsbotoncolor }
-                                  ]}
-                                  onPress={() => handleButtonPress('PENDIENTES')}
-                                  >
-                                    <Text style={[styles.textoBoton,
-                                      
-                                      selectedButton === 'PENDIENTES' && {color: 'white',},
-                                      selectedButton === 'PENDIENTES' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                                      
-                                      
-                                    ]}
-                                    >PENDIENTES</Text>
-                                  </TouchableOpacity >
-
-
-                                  <TouchableOpacity 
-                                  style={[
-                                    styles.botonopciones,
-                                    selectedButton === 'PROCESADOS' && { backgroundColor: colors.acctionsbotoncolor }
-                                  ]}
-                                  onPress={() => handleButtonPress('PROCESADOS')}
-                                  >
-                                    <Text style={[styles.textoBoton,
-                                      
-                                      selectedButton === 'PROCESADOS' && {color: 'white',},
-                                      selectedButton === 'PROCESADOS' ? { fontFamily: fonts.regularbold.fontFamily} :  { fontFamily: fonts.regular.fontFamily} 
-                                      
-                                      
-                                    ]}
-                                    >PROCESADOS</Text>
-                                  </TouchableOpacity >
-
-
-
-                                </View>
-                              </View>
 
 
                               <View style={{padding:15,marginBottom:90 }}>

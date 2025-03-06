@@ -9,8 +9,7 @@ import Generarpeticion from '../../../Apis/peticiones';
 import Handelstorage from '../../../Storage/handelstorage';
 
 import { AuthContext } from '../../../AuthContext';
-import { FontAwesome } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
+
 function ListadoFacturas({ navigation }){
     const { activarsesion, setActivarsesion } = useContext(AuthContext);
     const { navigate } = useNavigation();
@@ -46,59 +45,6 @@ function ListadoFacturas({ navigation }){
   
     const selecionar_registro =(detaraeg)=>{
       
-      // let estructura = {
-      //   Conceptos: {},
-      //   DataEmpresa: {
-      //     "Empresa": detaraeg.NombreEmpresa,
-      //     "NroRuc": detaraeg.RucEmpresa
-      //   },
-      //   DataFactura:{
-      //     "FechaOperacion":detaraeg.fecha_factura,
-      //     "NroFactura":detaraeg.numero_factura
-      //   },
-      //   DataMontos:{
-      //     "total_operacion":detaraeg.total_factura,
-      //     "liq_iva10":detaraeg.iva10,
-      //     "liq_iva5":detaraeg.iva5,
-      //     "total_iva":detaraeg.liquidacion_iva
-      //   },
-      //   Datosregistro:{
-      //     "Fecharegistro":detaraeg.fecha_registro,
-      //     "IdOperacion":detaraeg.id.toString(),
-      //     "FormaRegistro":detaraeg.tipo_registro
-      //   }
-
-      // };
-
-      // detaraeg.DetalleFactura.forEach((detalle, index) => {
-      //   // Generar un nombre de ítem dinámico: Item_1, Item_2, ...
-      //   let itemKey = `Item_${index + 1}`;
-    
-      //   // Asignar los valores correspondientes
-      //   estructura.Conceptos[itemKey] = {
-      //     "dAntGloPreUniIt": "",
-      //     "dAntPreUniIt": "",
-      //     "dBasExe": "",
-      //     "dBasGravIVA": "",
-      //     "dCantProSer": detalle.cantidad,
-      //     "dCodInt": "",
-      //     "dDesAfecIVA": "",
-      //     "dDesProSer": detalle.concepto,
-      //     "dDesUniMed": "",
-      //     "dDescGloItem": "",
-      //     "dDescItem": "",
-      //     "dLiqIVAItem": "",
-      //     "dPUniProSer": "",
-      //     "dPorcDesIt": "",
-      //     "dPropIVA": "",
-      //     "dTasaIVA": "",
-      //     "dTotBruOpeItem": "",
-      //     "dTotOpeItem": detalle.total,
-      //     "iAfecIVA": ""
-      //   };
-      // });
-    
-      // Imprimir la nueva estructura
       actualizarEstadocomponente('datafactura',detaraeg)
       actualizarEstadocomponente('factura_editar',detaraeg.id)
       navigate("DetalleFactura")

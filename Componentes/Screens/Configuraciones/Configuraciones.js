@@ -1,20 +1,15 @@
-import React,{useState,useEffect,useContext } from "react";
+import React,{useState,useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {  View,Text,TouchableOpacity,Linking,StyleSheet,Alert,ScrollView } from "react-native";
-import { Button} from 'react-native-paper';
-import Handelstorage from "../../../Storage/handelstorage";
-import Generarpeticion from "../../../Apis/peticiones";
+
 import FolderHandler from "../../FolderHandler/FolderHandler";
 
-
-import { AuthContext } from "../../../AuthContext";
 import { useTheme } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 
 /*Iconos*/
 
-import { AntDesign } from '@expo/vector-icons';
-import ScreensCabecera from "../../ScreensCabecera/ScreensCabecera";
+
 
 
 function Configuraciones({navigation}){

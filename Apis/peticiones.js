@@ -27,7 +27,7 @@ async function Generarpeticion(endpoint, metodo, bodyoptions) {
         }
       };
     } else {
-      if (endpoint === 'UploadAudio/') {
+    if (endpoint === 'UploadAudio/' || endpoint === 'LecturaImagenCdc/') {
         tiempoespera=90000
         requestOptions = {
           method: metodo.toUpperCase(),

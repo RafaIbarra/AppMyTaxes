@@ -1,7 +1,7 @@
-import React, { useState,useContext,useEffect } from 'react';
+import React, { useState,useContext,useEffect,useMemo,useCallback   } from 'react';
 import { View,  StyleSheet,Text,TouchableOpacity,ScrollView,Keyboard } from 'react-native';
-import { Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
-import { useTheme } from '@react-navigation/native';
+import { Dialog, Portal,PaperProvider,Button,DefaultTheme as PaperDefaultTheme  } from 'react-native-paper';
+import { useTheme,DefaultTheme as NavigationDefaultTheme } from '@react-navigation/native';
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import moment from 'moment';
@@ -9,6 +9,7 @@ import moment from 'moment';
 
 import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
 import CustomTextInput from '../../CustomTextInput/CustomTextInput';
+
 
 import Generarpeticion from '../../../Apis/peticiones';
 import Handelstorage from '../../../Storage/handelstorage';
@@ -20,7 +21,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { createIconSetFromFontello } from 'react-native-vector-icons';
 
-
+import {  TextInput} from 'react-native-paper';
 
 
 function CargaManual({ navigation }){
@@ -58,6 +59,51 @@ function CargaManual({ navigation }){
       
     const showDialog = () => setVisibledialogo(true);
     const hideDialog = () => setVisibledialogo(false);
+    
+    const combinedTheme = {
+      ...PaperDefaultTheme, // Base de Paper
+      ...NavigationDefaultTheme, // Base de Navigation
+      colors: {
+        ...PaperDefaultTheme.colors,
+        ...NavigationDefaultTheme.colors, 
+        primary: "gray",
+      },
+      fonts: {
+        regular: { fontFamily: fonts.regular.fontFamily },
+        medium: { fontFamily: fonts.regular.fontFamily },
+        light: { fontFamily: fonts.regular.fontFamily },
+        thin: { fontFamily: fonts.regular.fontFamily },
+        bodySmall: { fontFamily: fonts.regular.fontFamily }, 
+        bodyLarge: { fontFamily: fonts.regular.fontFamily }, // 🚀 Agregamos esta variante
+      },
+    };
+    const formatFactura = (text) => {
+      return text
+        .replace(/\D/g, "") // Elimina todo lo que no es número
+        .replace(/^(\d{3})(\d{0,3})(\d{0,17})$/, (match, p1, p2, p3) => {
+          let result = p1;
+          if (p2) result += `-${p2}`;
+          if (p3) result += `-${p3}`;
+          return result;
+        });
+    };
+    const formatMonto = (text) => {
+      
+      const numericValue = text.replace(/\./g, "");
+      const result=numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      
+      return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
+    const handleFacturaChange = (text) => {
+      setNrofactura(formatFactura(text)); // Aplica el formato y actualiza el estado
+    };
+
+   
+    const handleFormateoNumero=(text,funcion)=>{
+      funcion(formatMonto(text))
+    }
+
 
     const handleError = (errorObject) => {
       if (typeof errorObject === "object" && errorObject !== null) {
@@ -175,21 +221,24 @@ function CargaManual({ navigation }){
 
     const calculo_iva10=(valor)=>{
       setArticulos10(valor)
+      
       const numericValue = parseFloat(valor.replace(/\./g, "")) || 0;
       const i10 = Math.round(numericValue / 11);
-      
-      
-      setIva10(i10===0 ? '' : i10.toString())
+      const resulti10=i10===0 ? '' : i10.toString()
+  
+      setIva10(formatMonto(resulti10))
+
       const art5=parseFloat(articulos5.replace(/\./g, "")) || 0
       const artexenta=parseFloat(articulosexenta.replace(/\./g, "")) || 0
       const caltotalfac=art5 + artexenta +numericValue
+      const resultotal=caltotalfac===0 ? '' : caltotalfac.toString()
 
-
-      setTotalfactura(caltotalfac===0 ? '' : caltotalfac.toString())
+      setTotalfactura(formatMonto(resultotal))
 
       const iv5=parseFloat(iva5.replace(/\./g, "")) || 0
       const totiva=i10 +iv5
-      setTotaliva(totiva===0 ? '' : totiva.toString())
+      const resulttotaliva=totiva===0 ? '' : totiva.toString()
+      setTotaliva(formatMonto(resulttotaliva))
       
 
     }
@@ -198,17 +247,18 @@ function CargaManual({ navigation }){
       setArticulos5(valor)
       const numericValue = parseFloat(valor.replace(/\./g, "")) || 0;
       const i5 = Math.round(numericValue / 21);
-      
-      
-      setIva5(i5===0 ? '' : i5.toString())
+      const resulti5=i5===0 ? '' : i5.toString()
+      setIva5(formatMonto(resulti5))
+
       const art10=parseFloat(articulos10.replace(/\./g, "")) || 0
       const artexenta=parseFloat(articulosexenta.replace(/\./g, "")) || 0
       const caltotalfac=art10 + artexenta +numericValue
-      setTotalfactura(caltotalfac===0 ? '' :  caltotalfac.toString())
+      
+      setTotalfactura(formatMonto(caltotalfac===0 ? '' :  caltotalfac.toString()))
 
       const iv10=parseFloat(iva10.replace(/\./g, "")) || 0
       const totiva=i5 +iv10
-      setTotaliva(totiva===0 ? '' : totiva.toString())
+      setTotaliva(formatMonto(totiva===0 ? '' : totiva.toString()))
       
 
     }
@@ -219,7 +269,7 @@ function CargaManual({ navigation }){
       const art10=parseFloat(articulos10.replace(/\./g, "")) || 0
       const art5=parseFloat(articulos5.replace(/\./g, "")) || 0
       const caltotalfac=art5 + art10 +numericValue
-      setTotalfactura(caltotalfac===0 ? '' : caltotalfac.toString())
+      setTotalfactura(formatMonto(caltotalfac===0 ? '' : caltotalfac.toString()))
 
 
       
@@ -243,6 +293,7 @@ function CargaManual({ navigation }){
             if (registros && registros.length > 0) {
               setEmpresaeditable(false)
               setEmpresa(registros[0].nombre_empresa)
+              
             } else {
               setEmpresaeditable(true)
               setEmpresa('')
@@ -279,8 +330,10 @@ function CargaManual({ navigation }){
           (item) => item.concepto === "Articulos al 10%"
         )?.total || 0;
         const ent_item10=parseInt(totOpeItem10, 10)
+
+        calculo_iva10(ent_item10 === 0 ? '' : ent_item10.toString())
         
-        setArticulos10(ent_item10 === 0 ? '' : ent_item10.toString());
+        setArticulos10(formatMonto(ent_item10 === 0 ? '' : ent_item10.toString()));
 
 
 
@@ -288,13 +341,14 @@ function CargaManual({ navigation }){
           (item) => item.concepto === "Articulos al 5%"
         )?.total || 0;
         const ent_item5=parseInt(totOpeItem5, 10)
-        setArticulos5(ent_item5 === 0 ? '' : ent_item5.toString());
+        calculo_iva5(ent_item5 === 0 ? '' : ent_item5.toString())
+        setArticulos5(formatMonto(ent_item5 === 0 ? '' : ent_item5.toString()));
 
         const totOpeItemExenta = Object.values(valores_factura.DetalleFactura).find(
           (item) => item.concepto === "Articulos exenta"
         )?.total || 0;
         const ent_itemexenta=parseInt(totOpeItemExenta, 10)
-        setArticulosexenta(ent_itemexenta === 0 ? '' : ent_itemexenta.toString());
+        setArticulosexenta(formatMonto(ent_itemexenta === 0 ? '' : ent_itemexenta.toString()));
 
 
         // // const liqiva10=estadocomponente.datafactura.DataMontos.liq_iva10.toString()
@@ -311,7 +365,7 @@ function CargaManual({ navigation }){
 
         // const totope = estadocomponente.datafactura.DataMontos.total_operacion? estadocomponente.datafactura.DataMontos.total_operacion.toString(): '';
         setTotalfactura(valores_factura.total_factura)
-
+        
         // // 
 
         setNrofactura(valores_factura.numero_factura)
@@ -349,9 +403,19 @@ function CargaManual({ navigation }){
       };
     }, []);
 
+    const text_paper_backgroundcolor="transparent"
+    const text_paper_backgroundcolor_inactivo="#DEDDDC"
+    const text_paper_primary="#91918F"
+    const text_paper_roundness=10
+    const text_paper_font=fonts.regular.fontFamily
+    const text_paper_height=40
+
+   
+    
+
     return(
 
-       <PaperProvider >
+       <PaperProvider theme={combinedTheme}>
 
           <View style={[styles.container,{backgroundColor:colors.background}]}>
               <ScreensCabecera title={title} backto={backto}></ScreensCabecera>
@@ -399,49 +463,101 @@ function CargaManual({ navigation }){
                   <View style={styles.contenedorruc}>
 
                     <View style={{flex: 3,marginRight:10}}>
-                      <CustomTextInput
-                        placeholder="Ruc Empresa"
-                        value={ruc} // Esto se asegura de que siempre pase un valor a la prop
-                        onChangeText={setRuc}
-                        onBlur={consulta_ruc} 
-                      />
+                      
+                      <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Ruc Empresa"
+                          placeholder="Ruc Empresa"
+                          value={ruc}
+                          onChangeText={setRuc}
+                          onBlur ={() => consulta_ruc()}
+                          keyboardType={"numeric"} 
+                        />
+
+
+
                     </View>
 
                     <View style={{flex: 1,}}>
-                      <CustomTextInput
-                        placeholder="Div"
-                        value={div} // Esto se asegura de que siempre pase un valor a la prop
-                        onChangeText={setDiv}
-                        onBlur={consulta_ruc} 
-                      />
+                      
+                      <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Div"
+                          placeholder="Div"
+                          value={div}
+                          onChangeText={setDiv}
+                          onBlur ={() => consulta_ruc()}
+                          keyboardType={"numeric"} 
+                        />
+
                     </View>
                   </View>
 
-                  <View >
-                    <CustomTextInput
-                      placeholder="Nombre Empresa"
-                      value={empresa} // Esto se asegura de que siempre pase un valor a la prop
-                      onChangeText={setEmpresa}
-                      editable={empresaeditable}
-                    />
-                  </View>
-                  <View >
-                    <CustomTextInput
-                      placeholder="N° Factura"
-                      value={nrofactura} // Esto se asegura de que siempre pase un valor a la prop
-                      onChangeText={setNrofactura}
-                      formato = "factura"
-                    />
+                  <View style={{ marginTop: 15,}}>
+                    <TextInput
+                        theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                        style={{
+                          fontFamily:  text_paper_font,
+                          backgroundColor: empresaeditable ?text_paper_backgroundcolor : text_paper_backgroundcolor_inactivo,
+                          height:text_paper_height,
+                        }}
+                        mode="outlined"
+                        label="Nombre Empresa"
+                        placeholder="Nombre Empresa"
+                        value={empresa}
+                        onChangeText={setEmpresa}
+                        editable={empresaeditable}
+                      />
+                  </View> 
+                 
+                  <View style={{ marginTop: 15,}}>
+                   
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="N° Factura"
+                          placeholder="N° Factura"
+                          value={nrofactura}
+                          onChangeText={handleFacturaChange}
+                          keyboardType={"numeric"} 
+                        />
                   </View>
 
-                  <View style={styles.contenedorruc}>
+                  <View style={[styles.contenedorruc,{marginTop: 15,}]}>
 
                     <View style={{flex: 2,}}>
 
-                      <CustomTextInput
+                      
+
+                      <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Fecha Factura"
                           placeholder="Fecha Factura"
                           value={moment(fechafactura).format('DD/MM/YYYY')} // Esto se asegura de que siempre pase un valor a la prop
-                          // onChangeText={setFechafactura}
+                          
                         />
                     </View>
                     <View style={{flex: 3,}}>
@@ -462,29 +578,53 @@ function CargaManual({ navigation }){
                   </View>
 
                   
-                  <View style={styles.contenedorruc}>
+                  <View style={[styles.contenedorruc,{ marginTop: 15,}]}>
 
                       <View style={{flex: 4,marginRight:10}} >
-                        <CustomTextInput
-                          placeholder="Articulos al 10%"
-                          value={articulos10} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={(text) => {
-                            // Remover ceros iniciales
-                            const sanitizedValue = text.replace(/^0+/, "");
-                            setArticulos10(sanitizedValue);
-                            calculo_iva10(sanitizedValue); // Llamar a la función con el valor procesado
+                        
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
                           }}
-                          onBlur={() => calculo_iva10(articulos10)}
-                          formato = "numerico"
+                          mode="outlined"
+                          label="Artículos al 10%"
+                          placeholder="Artículos al 10%"
+                          value={articulos10}
+
+                          onChangeText={(text) => handleFormateoNumero(text, setArticulos10)}
+                          
+                          onBlur ={() => calculo_iva10(articulos10)}
+                          keyboardType={"numeric"} 
                         />
+                        
+                    
+
+                        
                       </View>
 
                       <View style={{flex: 3,marginRight:10}} >
-                        <CustomTextInput
+                        {/* <CustomTextInput
                           placeholder="Iva 10%"
                           value={iva10} // Esto se asegura de que siempre pase un valor a la prop
                           onChangeText={setIva10}
                           formato = "numerico"
+                        /> */}
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Iva 10%"
+                          placeholder="Iva 10%"
+                          value={iva10}
+                          onChangeText={(text) => handleFormateoNumero(text, setIva10)}
+                          keyboardType={"numeric"} 
                         />
                       </View>
                       {/* <View style={{flex: 1,}}>
@@ -496,56 +636,76 @@ function CargaManual({ navigation }){
                         </TouchableOpacity>
                       </View> */}
                   </View>
-                  <View style={styles.contenedorruc}>
+                  <View  style={[styles.contenedorruc,{ marginTop: 15,}]}>
                   
                       <View style={{flex: 4,marginRight:10}} >
-                        <CustomTextInput
-                          placeholder="Articulos al 5%"
-                          value={articulos5} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={(text) => {
-                            // Remover ceros iniciales
-                            const sanitizedValue = text.replace(/^0+/, "");
-                            setArticulos5(sanitizedValue);
-                            calculo_iva5(sanitizedValue); // Llamar a la función con el valor procesado
+                        
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
                           }}
-                          onBlur={() => calculo_iva5(articulos5)}
-                          formato = "numerico"
+                          mode="outlined"
+                          label="Artículos al 5%"
+                          placeholder="Artículos al 5%"
+                          value={articulos5}
+                          onChangeText={(text) => handleFormateoNumero(text, setArticulos5)}
+                          
+                          onBlur ={() => calculo_iva5(articulos5)}
+                          keyboardType={"numeric"} 
                         />
+
+
                       </View>
                       
                       <View style={{flex: 3,marginRight:10}} >
-                        <CustomTextInput
+                        
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Iva 5%"
                           placeholder="Iva 5%"
-                          value={iva5} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={setIva5}
-                          formato = "numerico"
+                          value={iva5}
+                          
+                          onChangeText={(text) => handleFormateoNumero(text, setIva5)}
+                          keyboardType={"numeric"} 
                         />
                       </View>
-                      {/* <View style={{flex: 1,}}>
-
-                        <TouchableOpacity 
-                            style={styles.botonfecha}
-                            onPress={showDatePicker}>         
-                            <Ionicons name="calculator-outline" size={35} color={colors.acctionsbotoncolor} />
-                        </TouchableOpacity>
-                      </View> */}
+                     
                   </View>
                   
-                  <View style={styles.contenedorruc}>
+                  <View  style={[styles.contenedorruc,{ marginTop: 15,}]}>
                   
                       <View style={{flex: 7,marginRight:10}} >
-                        <CustomTextInput
-                          placeholder="Articulos a Exenta"
-                          value={articulosexenta} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={(text) => {
-                            // Remover ceros iniciales
-                            const sanitizedValue = text.replace(/^0+/, "");
-                            setArticulosexenta(sanitizedValue);
-                            calculo_exenta(sanitizedValue); // Llamar a la función con el valor procesado
+                        
+
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
                           }}
-                          onBlur={() => calculo_exenta(articulosexenta)}
-                          formato = "numerico"
+                          mode="outlined"
+                          label="Articulos a Exenta"
+                          placeholder="Articulos a Exenta"
+                          value={articulosexenta}
+                          
+                          onChangeText={(text) => handleFormateoNumero(text, setArticulosexenta)}
+                          onBlur ={() => calculo_exenta(articulosexenta)}
+                          keyboardType={"numeric"} 
                         />
+
+
+
+
                       </View>
 
                       
@@ -558,23 +718,45 @@ function CargaManual({ navigation }){
                         </TouchableOpacity>
                       </View> */}
                   </View>
-                  <View style={styles.contenedorruc}>
+                  <View  style={[styles.contenedorruc,{ marginTop: 15,}]}>
 
                       <View style={{flex: 4,marginRight:10}}>
                       
-                        <CustomTextInput
+                        
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Total Factura"
                           placeholder="Total Factura"
-                          value={totalfactura} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={setTotalfactura}
-                          formato = "numerico"
+                          value={totalfactura}
+                          
+                          onChangeText={(text) => handleFormateoNumero(text, setTotalfactura)}
+                          keyboardType={"numeric"} 
                         />
+
+
+
                       </View>
                       <View style={{flex: 3,marginRight:10}} >
-                        <CustomTextInput
+                        
+                        <TextInput
+                          theme={{colors: { primary:text_paper_primary },roundness: text_paper_roundness,}}
+                          style={{
+                            fontFamily:  text_paper_font,
+                            backgroundColor:text_paper_backgroundcolor,
+                            height:text_paper_height,
+                          }}
+                          mode="outlined"
+                          label="Total IVA"
                           placeholder="Total IVA"
-                          value={totaliva} // Esto se asegura de que siempre pase un valor a la prop
-                          onChangeText={setTotaliva}
-                          formato = "numerico"
+                          value={totaliva}
+                          onChangeText={(text) => handleFormateoNumero(text, setTotaliva)}
+                          keyboardType={"numeric"} 
                         />
                       </View>
                   </View>
@@ -640,7 +822,7 @@ const styles = StyleSheet.create({
       height: 35, 
 
       marginLeft:'5%',
-      marginTop:20
+      marginTop:10
       // marginBottom:27
     },
 

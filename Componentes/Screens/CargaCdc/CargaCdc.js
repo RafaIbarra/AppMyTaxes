@@ -1,4 +1,4 @@
-import React, { useEffect,useContext,useState } from 'react';
+import React, { useEffect,useContext,useState  } from 'react';
 import { View, Text,  StyleSheet,  Alert,Linking,TouchableOpacity ,TextInput,Keyboard} from 'react-native';
 import { Dialog, Portal,PaperProvider,Button } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
@@ -8,7 +8,7 @@ import ScreensCabecera from '../../ScreensCabecera/ScreensCabecera';
 import FolderHandler from '../../FolderHandler/FolderHandler';
 import { AuthContext } from '../../../AuthContext';
 import Generarpeticion from '../../../Apis/peticiones';
-
+import Handelstorage from '../../../Storage/handelstorage';
 
 import { Audio } from 'expo-av';
 
@@ -24,35 +24,39 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Entypo from '@expo/vector-icons/Entypo';
+import CamraCdc from '../CamraCdc/CamraCdc';
 
 function CargaCdc({ navigation }){
+    
     const[title,setTitle]=useState('CARGA CDC')
     const[backto,setBackto]=useState('MainTabs2')
     const { navigate } = useNavigation();
     const { colors,fonts } = useTheme();
-     const [existe,setExiste]=useState(false)
+    const [existe,setExiste]=useState(true)
      
     const { estadocomponente } = useContext(AuthContext);
     const {  actualizarEstadocomponente } = useContext(AuthContext);
-    const [hasPermission, setHasPermission] = useState(false);
+    const { activarsesion, setActivarsesion } = useContext(AuthContext);
+    
     const [recording, setRecording] = useState(false);
 
 
     const [audioUri, setAudioUri] = useState(null);
     const [sound, setSound] = useState();
     const [transcripcion,setTranscripcion]=useState('')
-    const [modo,setModo]=useState(false)
+    
     const[cabeceracdc,setCabeceracdc]=useState()
     const [isPlaying, setIsPlaying] = useState(false);
 
-    const [formattedText, setFormattedText] = useState('');
+    
 
 
     const [visibledialogo, setVisibledialogo] = useState(false)
     const showDialog = () => setVisibledialogo(true);
     const hideDialog = () => setVisibledialogo(false);
     const[mensajeerror,setMensajeerror]=useState('')
-
+    const [opcion,setOpcion]=useState(0)
+    const [activadacamaracdc,setActivadacamaracdc]=useState(false)
 
 
     async function listAudioFiles() {
@@ -96,6 +100,10 @@ function CargaCdc({ navigation }){
       }
     }
 
+    const textocdc=(valor)=>{
+      const sinEspacios = valor.trim().replace(/\s+/g, ''); // Elimina espacios al inicio, al final y en medio
+      setTranscripcion(sinEspacios)
+    }
    
     async function cancelaroperacion() {
       try {
@@ -104,23 +112,38 @@ function CargaCdc({ navigation }){
         //   await recording.stopAndUnloadAsync();
         // }
         setRecording(false); // Restablecer el estado de grabación
-        setAudioUri(null); // Limpiar el URI del audio
+        
         setTranscripcion(null); // Restablecer la transcripción
-        setModo(false); // Restablecer el modo
+        
+        if(opcion===2){
+          if (recording){
+
+            await stopRecording()
+           
+          }
+          setAudioUri(null);
+        }
+        setOpcion(0)
         await deleteAllAudioFiles(); // Eliminar todos los archivos de audio
+
       } catch (error) {
         Alert('Error al cancelar la operación:', error);
       }
     }
     const cargamanual =()=>{
       
-      setModo('CDC')
+      
       setCabeceracdc('Carga manual CDC')
+      setOpcion(1)
     }
-    const textocdc=(valor)=>{
-      const sinEspacios = valor.trim().replace(/\s+/g, ''); // Elimina espacios al inicio, al final y en medio
-      setTranscripcion(sinEspacios)
+
+    const cargaimagen =()=>{
+      
+      
+      setCabeceracdc('Carga manual CDC')
+      setOpcion(3)
     }
+    
     async function deleteAudioFile(uri) {
       try {
         // Verifica si el archivo existe antes de intentar eliminarlo
@@ -138,7 +161,9 @@ function CargaCdc({ navigation }){
 
     async function startRecording() {
       try {
-        setModo('AUDIO')
+        
+        setOpcion(2)
+        
         const permission = await Audio.requestPermissionsAsync();
   
         if (permission.status === 'granted') {
@@ -161,6 +186,7 @@ function CargaCdc({ navigation }){
     }
 
     async function stopRecording() {
+      
       try {
         await recording.stopAndUnloadAsync();
         const uri = recording.getURI();
@@ -207,6 +233,7 @@ function CargaCdc({ navigation }){
          
           setTranscripcion(registros)
           setCabeceracdc('CDC listo')
+          setOpcion(1)
           
            await deleteAudioFile(audioUri);
            
@@ -251,6 +278,7 @@ function CargaCdc({ navigation }){
       }
     }
     async function stopAudio() {
+      
       if (sound) {
         try {
           await sound.stopAsync(); // Detener el audio
@@ -261,44 +289,20 @@ function CargaCdc({ navigation }){
         }
       }
     }
-    
-
     const copiarAlPortapapeles = async () => {
      
-        const valorACopiar =transcripcion
-        const datocdc={nombrecdc:valorACopiar}
-        actualizarEstadocomponente('datocdc',datocdc)
-        await Clipboard.setStringAsync(valorACopiar);
-        
-        
-        const url='https://ekuatia.set.gov.py/consultas/'
-        Linking.openURL(url).catch((err) => console.error("No se pudo abrir la URL:", err));
-        navigate("CargaArchivoXml", { })
-      };
+      const valorACopiar =transcripcion
+      const datocdc={nombrecdc:valorACopiar}
+      actualizarEstadocomponente('datocdc',datocdc)
+      await Clipboard.setStringAsync(valorACopiar);
+      
+      
+      const url='https://ekuatia.set.gov.py/consultas/'
+      Linking.openURL(url).catch((err) => console.error("No se pudo abrir la URL:", err));
+      navigate("CargaArchivoXml", { })
+    };
+
     
-    useEffect(() => {
-          const keyboardDidShowListener = Keyboard.addListener(
-            'keyboardDidShow',
-            () => {
-              
-              actualizarEstadocomponente('isKeyboardVisible',true)
-            }
-          );
-      
-          const keyboardDidHideListener = Keyboard.addListener(
-            'keyboardDidHide',
-            () => {
-              
-              actualizarEstadocomponente('isKeyboardVisible',false)
-            }
-          );
-      
-          // Limpiar los listeners cuando el componente se desmonte
-          return () => {
-            keyboardDidHideListener.remove();
-            keyboardDidShowListener.remove();
-          };
-        }, []);
 
     useEffect(() => {
               const unsubscribe = navigation.addListener('focus', () => {
@@ -306,86 +310,107 @@ function CargaCdc({ navigation }){
               const Comprobarexistencia = async () => {
                   const dato= await FolderHandler.checkIfDirectoryExists();
                   
-                  setExiste(dato) 
+                  // setExiste(dato)
+                  setExiste(true) 
                  };
               Comprobarexistencia()
           })
           return unsubscribe;
         })
     
-  return (
-    <PaperProvider>
-      <View style={styles.container}>
-        <ScreensCabecera title={title} backto={backto} />
+    
+    useEffect(() => {
+      const keyboardDidShowListener = Keyboard.addListener(
+        'keyboardDidShow',
+        () => {
+          
+          actualizarEstadocomponente('isKeyboardVisible',true)
+        }
+      );
   
-        <Portal>
-          <Dialog visible={visibledialogo} onDismiss={hideDialog}>
-            <Dialog.Icon icon="alert-circle" size={50} color="red" />
-            <Dialog.Title>ERROR</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="bodyMedium">{mensajeerror}</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={hideDialog}>OK</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
+      const keyboardDidHideListener = Keyboard.addListener(
+        'keyboardDidHide',
+        () => {
+          
+          actualizarEstadocomponente('isKeyboardVisible',false)
+        }
+      );
   
-        {existe ? (
-          <>
-            {/* Lógica principal cuando `existe` es true */}
-            {!recording && !audioUri && !modo && (
-              <View style={styles.containercentral}>
-                <View style={styles.botoneragrabacion}>
-                  <View style={styles.botonContainer}>
-                    <TouchableOpacity
-                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
-                      onPress={cargamanual}
-                    >
-                      <Entypo name="pencil" size={50} color="white" />
-                    </TouchableOpacity>
-                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
-                      Cargar Cdc
-                    </Text>
-                  </View>
-  
-                  <View style={styles.botonContainer}>
-                    <TouchableOpacity
-                      style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
-                      onPress={startRecording}
-                    >
-                      <Feather name="mic" size={50} color="white" />
-                    </TouchableOpacity>
-                    <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
-                      Grabar Audio
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-  
-            {(audioUri || modo) && (
-              <View style={styles.viewmic}>
-                <TouchableOpacity
-                  style={[styles.botoncamara, { backgroundColor: "red" }]}
-                  onPress={cancelaroperacion}
-                >
-                  <MaterialIcons name="cancel" size={60} color="white" />
-                </TouchableOpacity>
-              </View>
-            )}
-  
-            {recording && (
-              <View style={styles.containercentral}>
+      // Limpiar los listeners cuando el componente se desmonte
+      return () => {
+        keyboardDidHideListener.remove();
+        keyboardDidShowListener.remove();
+      };
+    }, []);
+
+    const ListaOpciones=()=>{
+      return(
+        
+          <View style={styles.botoneragrabacion}>
+
+            <View style={styles.botonContainer}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                onPress={cargamanual}
+              >
+                <Entypo name="pencil" size={50} color="white" />
+              </TouchableOpacity>
+              <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                Cargar Cdc
+              </Text>
+            </View>
+
+            <View style={styles.botonContainer}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                onPress={startRecording}
+              >
+                <Feather name="mic" size={50} color="white" />
+              </TouchableOpacity>
+              <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                Grabar Audio
+              </Text>
+            </View>
+
+            <View style={styles.botonContainer}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                onPress={cargaimagen}
+              >
+                <Feather name="image" size={50} color="white" />
+              </TouchableOpacity>
+              <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                Imagen
+              </Text>
+            </View>
+
+
+          </View>
+      
+      )
+    }
+
+
+    
+
+    const OpcionGrabacion=()=>{
+      return(
+        <View style={styles.containercentral}>
+            {
+              !audioUri &&(
+                <View style={styles.containercentral}>
                 <LottieView source={require("../../../assets/sound2.json")} autoPlay loop style={{ width: 200, height: 200 }} />
                 <TouchableOpacity style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]} onPress={stopRecording}>
                   <FontAwesome5 name="stop-circle" size={24} color="white" />
                 </TouchableOpacity>
               </View>
-            )}
+              )
+            }
+              
+            
   
             {audioUri && (
-              <View style={styles.containercentral}>
+              <View style={styles.containercentralopcion2}>
                 <Text style={{ fontFamily: fonts.regularbold.fontFamily, fontSize: 30 }}>Grabación lista</Text>
                 <View style={styles.botoneragrabacion}>
                   <View style={styles.botonContainer}>
@@ -414,48 +439,93 @@ function CargaCdc({ navigation }){
                 </View>
               </View>
             )}
+        </View>
+      )
+    }
+    
+  return (
+    <PaperProvider>
+      <View style={styles.container}>
+        { !activadacamaracdc &&(<ScreensCabecera title={title} backto={backto} />)}
   
-            {(modo === "CDC" || (modo === "AUDIO" && transcripcion)) && (
-              <View style={styles.containercentral}>
-                <Text style={{ fontFamily: fonts.regularbold.fontFamily, fontSize: 30 }}>{cabeceracdc}</Text>
-                <View style={[styles.contenedorcdc, { marginTop: 20 }]}>
-                  <Text style={[styles.labelcdc, { fontFamily: fonts.regular.fontFamily }]}>CDC:</Text>
-                  <TextInput
-                    style={[
-                      styles.inputcdc,
-                      {
-                        color: colors.text,
-                        backgroundColor: colors.backgroundInpunt,
-                        fontFamily: fonts.regular.fontFamily,
-                      },
-                    ]}
-                    value={transcripcion}
-                    onChangeText={textocdc}
-                    underlineColorAndroid="transparent"
-                    multiline={true}
-                    scrollEnabled={true}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <Text style={{ fontFamily: fonts.regular.fontFamily, color: "red" }}>
-                  {String(transcripcion || "").replace(/(\d{4})/g, "$1 ")}
-                </Text>
-                <View style={styles.botonContainer}>
-                  <TouchableOpacity
-                    style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
-                    onPress={copiarAlPortapapeles}
-                  >
-                    <FontAwesome name="opera" size={50} color="white" />
-                  </TouchableOpacity>
-                  <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
-                    Consulta Cdc
-                  </Text>
-                </View>
-              </View>
-            )}
-          </>
-        ) 
-        : 
+        <Portal>
+          <Dialog visible={visibledialogo} onDismiss={hideDialog}>
+            <Dialog.Icon icon="alert-circle" size={50} color="red" />
+            <Dialog.Title>ERROR</Dialog.Title>
+            <Dialog.Content>
+              <Text variant="bodyMedium">{mensajeerror}</Text>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={hideDialog}>OK</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+
+        <View style={{ flex: 7 }}>
+            {
+              opcion===0 &&(
+                <ListaOpciones></ListaOpciones>
+              )
+            }
+            
+            {
+              opcion===1 &&(
+                <View style={styles.containercentral}>
+                    <Text style={{ fontFamily: fonts.regularbold.fontFamily, fontSize: 30 }}>{cabeceracdc}</Text>
+                    <View style={[styles.contenedorcdc, { marginTop: 20 }]}>
+                      <Text style={[styles.labelcdc, { fontFamily: fonts.regular.fontFamily }]}>CDC:</Text>
+                      <TextInput
+                        style={[
+                          styles.inputcdc,
+                          {
+                            color: colors.text,
+                            backgroundColor: colors.backgroundInpunt,
+                            fontFamily: fonts.regular.fontFamily,
+                          },
+                        ]}
+                        value={transcripcion}
+                        onChangeText={textocdc}
+                        underlineColorAndroid="transparent"
+                        multiline={true}
+                        scrollEnabled={true}
+                        keyboardType="numeric"
+                      />
+
+                
+                    </View>
+                    <Text style={{ fontFamily: fonts.regular.fontFamily, color: "red" }}>
+                      {String(transcripcion || "").replace(/(\d{4})/g, "$1 ")}
+                    </Text>
+                    <View style={styles.botonContainer}>
+                      <TouchableOpacity
+                        style={[styles.botoncamara, { backgroundColor: "#57DCA3" }]}
+                        onPress={copiarAlPortapapeles}
+                      >
+                        <FontAwesome name="opera" size={50} color="white" />
+                      </TouchableOpacity>
+                      <Text style={[styles.textoboton, { color: colors.textsub, fontFamily: fonts.regular.fontFamily }]}>
+                        Consulta Cdc
+                      </Text>
+                    </View>
+                  </View>
+              )
+            }
+
+            {
+              opcion===2 &&(
+                <OpcionGrabacion></OpcionGrabacion>
+              )
+            }
+
+            {
+              opcion===3 &&(
+                <CamraCdc setActivadacamaracdc={setActivadacamaracdc} setTranscripcion={setTranscripcion} setOpcion={setOpcion} ></CamraCdc>
+              )
+            }
+        </View>
+
+  
+        {!existe && 
         (
           // Si `existe` es false, mostrar la alerta con animación
           <View style={styles.containercentral}>
@@ -468,6 +538,24 @@ function CargaCdc({ navigation }){
           </View>
         )
         }
+         {!activadacamaracdc &&(
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          {
+            opcion !==0 && !activadacamaracdc &&(
+              <View style={styles.viewmic}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: "red" }]}
+                onPress={cancelaroperacion}
+              >
+                <MaterialIcons name="cancel" size={60} color="white" />
+              </TouchableOpacity>
+            </View>
+            )
+          }
+          </View>
+         )
+        }
+
       </View>
     </PaperProvider>
   );
@@ -481,9 +569,11 @@ const styles = StyleSheet.create({
       
     },
     viewmic:{
-      position: 'absolute', 
-      bottom: 20,          
-      right: 20,           
+      
+      
+      width:'100%',
+      alignItems:'flex-end',
+      paddingRight:20
       
       
     },
@@ -493,12 +583,24 @@ const styles = StyleSheet.create({
       alignItems: 'center', 
     }
     ,
+    containercentralopcion2:{
+      
+      justifyContent: 'center', // Centra verticalmente
+      alignItems: 'center', 
+      height:'50%',
+      paddingRight:50,
+      paddingLeft:50
+    }
+    ,
     botoneragrabacion:{
+      flex:1,
       flexDirection: 'row',
-      marginTop: 20,
-      justifyContent: 'space-between', // Crea un espacio equitativo entre los botones
+      
+      justifyContent:'space-between', // Crea un espacio equitativo entre los botones
       alignItems: 'center',
-      width: '50%',                   // Ajusta el ancho del contenedor para controlar la separación
+      width: '100%',
+      paddingRight:50,
+      paddingLeft:50
       
     },
     botonContainer: {

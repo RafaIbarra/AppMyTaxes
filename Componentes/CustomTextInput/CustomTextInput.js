@@ -21,6 +21,7 @@ const CustomTextInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
   const animatedPlaceholder = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const [selection, setSelection] = useState({ start: value.length, end: value.length });
 
   const animatePlaceholder = (toValue) => {
     Animated.timing(animatedPlaceholder, {
@@ -30,11 +31,20 @@ const CustomTextInput = ({
     }).start();
   };
 
-  const handleFocus = () => {
-    setIsFocused(true);
-    animatePlaceholder(1);
-  };
-
+  // const handleFocus = () => {
+  //   setIsFocused(true);
+  //   animatePlaceholder(1);
+  //   console.log(value.length)
+    
+  // };
+const handleFocus = () => {
+  setIsFocused(true);
+  animatePlaceholder(1);
+  
+  setTimeout(() => {
+    setSelection({ start: value.length, end: value.length });
+  }, 0); // Delay de 0ms para permitir la actualización correcta
+};
   const formatValue = (inputValue) => {
     if (formato === "numerico") {
       const numericValue = inputValue.replace(/\./g, "");
@@ -119,7 +129,11 @@ const CustomTextInput = ({
         <TextInput
           ref={inputRef}
           value={value}
-          onChangeText={handleChangeText}
+           //onChangeText={handleChangeText}
+          onChangeText={(text) => {
+            onChangeText(text);
+            setSelection({ start: text.length, end: text.length }); // Ajustar cursor en cada cambio
+          }}
           keyboardType={formato === "numerico" || formato === "numero" ? "numeric" : "default"}
           style={[
             styles.input,
@@ -134,6 +148,8 @@ const CustomTextInput = ({
           editable={editable}
           multiline={multiline}
           scrollEnabled={scrollEnabled}
+          // selection={{ start: value.length, end: value.length }}
+          selection={selection} // Controlado dinámicamente
           {...props}
         />
       </View>

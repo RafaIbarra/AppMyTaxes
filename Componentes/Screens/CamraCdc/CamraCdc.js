@@ -3,18 +3,25 @@ import { View, TouchableOpacity, Text, StyleSheet, Image, Alert } from 'react-na
 import { CameraView,useCameraPermissions } from 'expo-camera';
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from '@react-navigation/native';
-import LottieView from 'lottie-react-native';
 import * as ImagePicker from 'expo-image-picker';
+
+
+
 import * as MediaLibrary from 'expo-media-library'; // Importar MediaLibrary
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 import Entypo from '@expo/vector-icons/Entypo';
 import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { AuthContext } from '../../../AuthContext';
-function CamraCdc({ navigation }) {
-  const [hasPermission, setHasPermission] = useState(null);
+import Generarpeticion from '../../../Apis/peticiones';
+import Handelstorage from '../../../Storage/handelstorage';
 
+function CamraCdc({ navigation,setActivadacamaracdc,setTranscripcion,setOpcion }) {
+  const [hasPermission, setHasPermission] = useState(null);
+  const [modo,setModo]=useState(0)
   const [permission, requestPermission] = useCameraPermissions();
 
   const [photo, setPhoto] = useState(null);
@@ -25,7 +32,10 @@ function CamraCdc({ navigation }) {
 
   const { estadocomponente } = useContext(AuthContext);
   const {  actualizarEstadocomponente } = useContext(AuthContext);
+  const { activarsesion, setActivarsesion } = useContext(AuthContext);
   const [recortado,setRecortado]=useState(false)
+  const [activarrecorte,setActivarrecorte]=useState(false)
+  
 
    useEffect(() => {
       if (permission && !permission.granted) {
@@ -43,6 +53,9 @@ function CamraCdc({ navigation }) {
       }
     })();
   }, []);
+  useEffect(() => {
+    
+  }, [activarrecorte]);
   
   // Tomar una foto y guardarla automáticamente
   const takePicture = async () => {
@@ -52,6 +65,7 @@ function CamraCdc({ navigation }) {
         const photo = await cameraRef.current.takePictureAsync();
         setPhoto(photo.uri); // Mostrar la vista previa
         setRecortado(false)
+        setActivarrecorte(true)
         // Guardar la foto en la galería
         await MediaLibrary.saveToLibraryAsync(photo.uri);
         Alert.alert("Éxito", "La imagen se ha guardado en la galería.");
@@ -64,25 +78,36 @@ function CamraCdc({ navigation }) {
 
   const activar_camara = async () => {
     setRecortado(false)
-    
+    setModo(1)
     if (!permission) {
       await requestPermission();
     }
   
     if (permission && permission.granted) {
-      console.log('Permiso concedido, activando cámara');
+      
       setCamarainiciada(true);
+      setActivadacamaracdc(true)
       actualizarEstadocomponente('camaracdc',true)
     } else {
       Alert.alert("Permiso denegado", "No se concedió permiso para acceder a la cámara.");
     }
   };
   const desactivar_camara=()=>{
+    // actualizarEstadocomponente('camaracdc',false)
+    // setCamarainiciada(false)
+    // setActivadacamaracdc(false)
     actualizarEstadocomponente('camaracdc',false)
     setCamarainiciada(false)
+    setActivadacamaracdc(false)
+    setPhoto(null)
+    setModo(0)
+    setRecortado(false)
+    setActivarrecorte(false)
+  
   }
 // Recortar la imagen y guardarla en la galería
   const cropImage = async () => {
+    setActivarrecorte(true)
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -109,41 +134,158 @@ function CamraCdc({ navigation }) {
   };
 
 
-  const ComponenteInicio=()=>{
-    return(
-      <View style={styles.containerobjets}>
-      <LottieView
-            source={require('../../../assets/takepicture.json')}
-            style={{ width: 300, height: 300 }}
-            autoPlay
-            loop
-          />
-          <TouchableOpacity
-            style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
-            onPress={activar_camara}
-          >
-            <FontAwesome name="camera-retro" size={45} color="white" />
-          </TouchableOpacity>
-          
-          <View style={styles.textContainer}>
-            <Text style={{ color: colors.textsub, fontFamily: fonts.regular.fontFamily}}>
-              Activar Cámara
-            </Text>
-          </View>
-      </View>
-    )
-  }
-
   const cerrar_imagen=()=>{
     actualizarEstadocomponente('camaracdc',false)
     setCamarainiciada(false)
+    setActivadacamaracdc(false)
     setPhoto(null)
+    setModo(0)
+    setRecortado(false)
+    setActivarrecorte(false)
   }
   const sacar_nueva_foto=()=>{
     setPhoto(null)
+    setActivarrecorte(true)
+  }
+  const enviar_imagen = async ()=>{
+    const formData = new FormData();
+    formData.append("image", {
+      uri: photo, 
+      name: "photo.jpg",
+      type: "image/jpeg",
+    });
+
+    
+    try {
+      actualizarEstadocomponente('tituloloading','ESPERANDO TRANSCRIPCION..')
+      actualizarEstadocomponente('loading',true)
+      const body = formData;
+      const endpoint='LecturaImagenCdc/'
+      const response = await Generarpeticion(endpoint, 'POST', body);
+      const respuesta=response['resp']
+      actualizarEstadocomponente('tituloloading','')
+      actualizarEstadocomponente('loading',false)
+      
+      if (respuesta === 200) {
+       
+        const registros=response['data']['transcripcion']
+       
+        
+        setTranscripcion(registros)
+        actualizarEstadocomponente('camaracdc',false)
+        setCamarainiciada(false)
+        setActivadacamaracdc(false)
+        setPhoto(null)
+        setModo(0)
+        setRecortado(false)
+        setActivarrecorte(false)
+        setOpcion(1)
+      } else if(respuesta === 403 || respuesta === 401){
+
+        await Handelstorage('borrar')
+        setActivarsesion(false)
+        
+      } else{
+        
+        showDialog(true)
+        
+        setMensajeerror( handleError(response['data']['error']))
+      }
+    } catch (error) {
+      Alert('Error al enviar el audio:', error);
+    }
+  }
+
+  const selecionar_imagen =async(habilitaredicion)=>{
+    setModo(2)
+    setActivarrecorte(false)
+    setCamarainiciada(true);
+    setActivadacamaracdc(true)
+    actualizarEstadocomponente('camaracdc',true)
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Necesitas habilitar el acceso a la galería.');
+      return null;
+    }
+
+    // Abrir la galería de imágenes
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Solo imágenes
+      allowsEditing: habilitaredicion, // No permite recortar
+      quality: 1, // Calidad máxima
+    });
+
+    if (!resultado.canceled) {
+      setPhoto(resultado.assets[0].uri);  // Retorna la URI de la imagen seleccionada
+    }
+    
+  }
+  const recortar=()=>{
+    setModo(0)
+    setActivarrecorte(true)
+
   }
   const size_boton=40
   const color_boton='white'
+  const ComponenteImagen=()=>{
+    const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+    const [containerWidth, setContainerWidth] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(0);
+
+    useEffect(() => {
+      if (photo) {
+        Image.getSize(photo, (width, height) => {
+          setImageSize({ width, height });
+        });
+      }
+    }, [photo]);
+    return(
+    <View  style={{ flex:1}}>
+      <View 
+        style={{ flex: 7}} 
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          setContainerWidth(width);
+          setContainerHeight(height);
+        }}
+      >
+        <Image
+          source={{ uri: photo }}
+          style={{
+            width: imageSize.width <= containerWidth ? imageSize.width : containerWidth,
+            height: imageSize.height <= containerHeight ? imageSize.height : containerHeight,
+            resizeMode: 'contain', // Mantiene la proporción original sin cortar
+          }}
+        />
+      </View>
+      <View style={styles.previewContainer}>
+              <View style={styles.buttonRow}>
+                {activarrecorte &&(
+                <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={cropImage}>
+                    <FontAwesome name="cut" size={size_boton} color={color_boton} />
+                </TouchableOpacity>
+
+                )}
+                {
+                  modo===1 &&(
+
+                  <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={sacar_nueva_foto}>
+                    <Entypo name="back-in-time" size={size_boton} color={color_boton}/>
+                  </TouchableOpacity>
+                  )
+                }
+                <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={cerrar_imagen}>
+                  <MaterialIcons name="cancel" size={size_boton} color={color_boton} />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={ enviar_imagen}>
+                  <MaterialCommunityIcons name="send" size={size_boton} color={color_boton} />
+                </TouchableOpacity>
+              </View>
+      </View>
+    </View>
+    )
+  }
   const ComponenteCamara = () => {
     return (
       <View style={{ flex: 1 }}>
@@ -154,8 +296,9 @@ function CamraCdc({ navigation }) {
                   <SimpleLineIcons name="close" size={40} color="red" />
               </TouchableOpacity>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.buttonfoto,{ backgroundColor: colors.acctionsbotoncolor,}]}onPress={takePicture}>
-                  <Text style={[styles.text,{color:'white',fontFamily: fonts.regular.fontFamily}]}>Tomar foto</Text>
+                <TouchableOpacity onPress={takePicture}>
+                  {/* <Text style={[styles.text,{color:'white',fontFamily: fonts.regular.fontFamily}]}>Tomar foto</Text> */}
+                  <Ionicons name="radio-button-on-sharp" size={100} color="white" />
                 </TouchableOpacity>
                 
               </View>
@@ -166,43 +309,96 @@ function CamraCdc({ navigation }) {
           )
         ) : (
           // Si hay foto, muestra la vista previa
-          <View style={styles.previewContainer}>
-            <Image source={{ uri: photo }} style={recortado ? styles.previewImageCut : styles.previewImage}  />
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={cropImage}>
-                  <FontAwesome name="cut" size={size_boton} color={color_boton} />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={sacar_nueva_foto}>
-                <Entypo name="back-in-time" size={size_boton} color={color_boton}/>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={cerrar_imagen}>
-                <MaterialIcons name="cancel" size={size_boton} color={color_boton} />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.button,{ backgroundColor: colors.acctionsbotoncolor,}]} onPress={() => setCamarainiciada(false)}>
-                <MaterialCommunityIcons name="send" size={size_boton} color={color_boton} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <ComponenteImagen></ComponenteImagen>
         )}
       </View>
     );
   };
+  const ComponenteInicio=()=>{
+    return(
+      <View style={styles.containerobjets}>
+          <View style={styles.containeriteminicio}> 
+            <View style={styles.containeriteminicioobjetos}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
+                onPress={activar_camara}
+              >
+                <FontAwesome name="camera-retro" size={45} color="white" />
+              </TouchableOpacity>
+              
+              <View style={styles.textContainer}>
+                <Text style={[styles.texto,{color:colors.text, fontFamily: fonts.regularbold.fontFamily,textDecorationLine:'underline',marginBottom:3}]}>Sacar foto</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Quita una foto de la factura</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Recórtala, dejando solo el área de los números que componen el CDC</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Sube la foto y espera el resultado</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.containeriteminicio}> 
+            <View style={styles.containeriteminicioobjetos}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
+                onPress={()=>selecionar_imagen(false)}
+              >
+                <MaterialIcons name="image-search" size={45} color="white" />
+              </TouchableOpacity>
+              
+              <View style={styles.textContainer}>
+                <Text style={[styles.texto,{color:colors.text, fontFamily: fonts.regularbold.fontFamily,textDecorationLine:'underline',marginBottom:3}]}>Seleccionar imagen recortada</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Esta opción no permite editar imágenes</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* La imagen seleccionada debe contener únicamente el área de los números que componen el CDC</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.containeriteminicio}> 
+            <View style={styles.containeriteminicioobjetos}>
+              <TouchableOpacity
+                style={[styles.botoncamara, { backgroundColor: '#57DCA3' }]}
+                onPress={()=>selecionar_imagen(true)}
+              >
+                <MaterialCommunityIcons name="image-edit-outline" size={45} color="white" />
+              </TouchableOpacity>
+              
+              <View style={styles.textContainer}>
+                <Text style={[styles.texto,{color:colors.text, fontFamily: fonts.regularbold.fontFamily,textDecorationLine:'underline',marginBottom:3}]}>Selección y edición de imagen</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Selecciona la imagen</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Recórtala, dejando solo el área de los números que componen el CDC</Text>
+                <Text style={[styles.texto,{color:colors.textsub, fontFamily: fonts.regular.fontFamily}]}>* Sube la foto y espera el resultado</Text>
+              </View>
+            </View>
+          </View>
+         
+          
+      </View>
+    )
+  }
   
   return (
     <View style={styles.container}>
 
-       
       {
-        !camarainiciada ?(
+        modo===0 && !activarrecorte&&(
           <ComponenteInicio></ComponenteInicio>
         )
-        :
-        (
+      }
+      {
+        modo===1 && (
           <ComponenteCamara></ComponenteCamara>
         )
       }
+     
+      {
+        modo>1 &&(
+          <ComponenteImagen  ></ComponenteImagen>
+        )
+      }
 
-
+      {/* {
+        activarrecorte &&(
+          <Cropper imageUri={photo}></Cropper>
+        )
+      } */}
 
  
     </View>
@@ -255,19 +451,18 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth:1,
+    borderColor:'gray',
+    borderTopLeftRadius:50,
+    borderTopRightRadius:50
   },
   previewImage: {
-    width: '100%',
-    height: '100%',
+    height:'100%',
+    width:'100%',
+    
     
   },
-  previewImageCut: {
-    width: '100%',
-    height: '50%',
-    
-  },
+  
   buttonRow: {
     position: 'absolute',
     bottom: 20, // Ajusta según necesites
@@ -287,16 +482,40 @@ const styles = StyleSheet.create({
     borderRadius:20
     
   },
-  textContainer: {
-    marginTop: 10, // Espacio entre el botón y el texto
-    justifyContent: 'center',
-    alignItems: 'center',
+  containerobjets:{
+    margin:15,
+    flex:1,
+    justifyContent:'space-between'
+    
     
   },
-  containerobjets:{
-    flex:1,
-    justifyContent: 'center',
-    alignItems: 'center'
+  containeriteminicio: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor:'gray',
+    borderRadius: 30,
+    padding: 10,
+    
+  },
+  containeriteminicioobjetos: {
+    flexDirection: 'row',
+    justifyContent:'center',
+    alignContent:'center',
+    alignItems:'center',
+    
+    // alignItems: 'flex-start',
+    // justifyContent: 'flex-start',
+    // alignContent: 'flex-start',
+    //flex: 1, // Permite que los elementos internos usen el espacio disponible
+  },
+  textContainer: {
+    marginLeft: 10,
+    flexShrink: 1, // Permite que el contenedor del texto se reduzca si es necesario
+    width: '100%', // Asegura que los textos no sobrepasen el View
+  },
+  texto: {
+    
+    flexWrap: 'wrap', // Permite que el texto haga saltos de línea
   },
 });
 
